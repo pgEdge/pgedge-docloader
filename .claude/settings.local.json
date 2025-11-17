@@ -15,7 +15,8 @@
       "Bash(go test:*)",
       "Bash(go tool cover:*)",
       "Bash(cat:*)",
-      "Bash(golangci-lint run:*)"
+      "Bash(golangci-lint run:*)",
+      "Bash(gofmt:*)"
     ],
     "deny": [],
     "ask": []
