@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(make deps:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(make build:*)",
+      "Bash(make test:*)",
+      "Bash(make lint:*)",
+      "Bash(./pgedge-docloader:*)",
+      "Bash(make clean:*)",
+      "Bash(./bin/pgedge-docloader:*)",
+      "Bash(psql:*)",
+      "Bash(go run:*)",
+      "Bash(go test:*)",
+      "Bash(go tool cover:*)",
+      "Bash(cat:*)",
+      "Bash(golangci-lint run:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

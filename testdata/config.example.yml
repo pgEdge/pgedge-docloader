@@ -1,0 +1,27 @@
+# Example configuration file for pgEdge Document Loader
+
+# Source documents (file, directory, or glob pattern)
+source: "./docs"
+
+# Strip path from filenames
+strip-path: false
+
+# Database connection settings
+db-host: localhost
+db-port: 5432
+db-name: mydb
+db-user: myuser
+db-sslmode: prefer
+db-table: documents
+
+# Column mappings
+col-doc-title: title
+col-doc-content: content
+col-source-content: source
+col-file-name: filename
+col-file-modified: modified
+col-row-created: created_at
+col-row-updated: updated_at
+
+# Operation mode
+update: true
