@@ -1,3 +1,12 @@
+//-------------------------------------------------------------------------
+//
+// pgEdge Docloader
+//
+// Portions copyright (c) 2025, pgEdge, Inc.
+// This software is released under The PostgreSQL License
+//
+//-------------------------------------------------------------------------
+
 package main
 
 import (
@@ -15,7 +24,7 @@ import (
 )
 
 var (
-	version = "dev"
+	version = "1.0.0-alpha1"
 	commit  = "none"
 	date    = "unknown"
 )
