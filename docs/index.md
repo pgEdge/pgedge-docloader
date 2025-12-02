@@ -60,4 +60,4 @@ The tool supports the following document formats:
 ## License
 
 This project is licensed under the PostgreSQL License. See
-[LICENCE.md](../LICENCE.md) for details.
+[LICENCE.md](https://github.com/pgEdge/pgedge-docloader/blob/main/LICENCE.md) for details.
