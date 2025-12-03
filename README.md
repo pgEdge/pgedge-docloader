@@ -108,7 +108,7 @@ col-file-name: filename
 update: true
 EOF
 
-# Run with a config file
+# Run with a configuration file
 export PGPASSWORD=mypassword
 pgedge-docloader --config config.yml
 ```
