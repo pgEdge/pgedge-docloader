@@ -24,7 +24,7 @@ database with extracted metadata.
 - **Multiple Format Support**: HTML, Markdown, and reStructuredText
     - **HTML** (`.html`, `.htm`) - Extracts title from `<title>` tag
     - **Markdown** (`.md`) - Extracts title from first `#` heading
-    - **reStructuredText** (`.rst`) - Converts `.rst` to Markdown
+    - **reStructuredText** (`.rst`) - Extracts title from underlined headings
 - **Automatic Conversion**: All formats converted to Markdown
 - **Metadata Extraction**: Titles, filenames, timestamps
 - **Flexible Input**: Single file, directory, or glob patterns (including `**` recursive matching)
