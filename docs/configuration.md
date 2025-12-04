@@ -1,12 +1,24 @@
 # Configuration
 
-The pgEdge Document Loader can be configured using a YAML configuration file
-and/or command-line flags. Command-line flags always take precedence over
-configuration file settings.
+The pgEdge Document Loader can be deployed with preferences saved in a [YAML configuration file](#specifying-options-in-a-configuration-file) and/or [command-line flags](#specifying-options-on-the-command-line). 
 
-## Configuration File
+When using a configuration file, paths are resolved relative to the configuration file's directory. For example:
 
-Create a YAML configuration file (e.g., `config.yml`):
+```yaml
+source: ../docs              # Relative to config file
+db-sslcert: ./certs/client.pem  # Relative to config file
+```
+
+When invoked without a configuration file, paths are relative to the current working directory.
+
+!!! note
+
+    Command-line flags always take precedence over configuration file settings.
+
+
+## Specifying Options in a Configuration File
+
+To save your deployment preferences in a file, create a YAML-formatted configuration file (for example, `config.yml`):
 
 ```yaml
 # Source documents
@@ -40,55 +52,58 @@ col-row-updated: updated_at
 update: true
 ```
 
-Use the configuration file:
+Then, when you invoke `pgedge-docloader`, include the `--config` flag and the configuration file name:
 
 ```bash
 pgedge-docloader --config config.yml
 ```
 
-## Configuration Options
+### Configuration File Options
 
-### Source Options
+Use the following options to specify details about the source document:
 
-- **source** (required): Path to file, directory, or glob pattern
-- **strip-path**: Remove directory path from filenames (default: false)
+| Option      | Required | Description                                         | Default |
+|-------------|----------|-----------------------------------------------------|---------|
+| source      | Yes      | Path to file, directory, or glob pattern            | —       |
+| strip-path  | No       | Remove directory path from filenames                | false   |
 
-### Database Connection
+Use the following options in a configuration file to specify details about the database connection:
 
-- **db-host**: Database hostname (default: localhost)
-- **db-port**: Database port (default: 5432)
-- **db-name** (required): Database name
-- **db-user** (required): Database username
-- **db-sslmode**: SSL mode - disable, allow, prefer, require, verify-ca,
-  verify-full (default: prefer)
-- **db-table** (required): Target table name
+| Option     | Required | Description                                                       | Default     |
+|------------|----------|-------------------------------------------------------------------|-------------|
+| db-host    | No       | Database hostname                                                 | localhost   |
+| db-port    | No       | Database port                                                     | 5432        |
+| db-name    | Yes      | Database name                                                     | —           |
+| db-user    | Yes      | Database username                                                 | —           |
+| db-sslmode | No       | SSL mode (disable, allow, prefer, require, verify-ca, verify-full)| prefer      |
+| db-table   | Yes      | Target table name                                                 | —           |
 
-### SSL/TLS Configuration
+Use the following options to specify details about the SSL/TLS configuration:
 
-- **db-sslcert**: Path to client SSL certificate
-- **db-sslkey**: Path to client SSL key
-- **db-sslrootcert**: Path to SSL root certificate
+| Option         | Required | Description                         | Default |
+|----------------|----------|-------------------------------------|---------|
+| db-sslcert     | No       | Path to client SSL certificate      | —       |
+| db-sslkey      | No       | Path to client SSL key              | —       |
+| db-sslrootcert | No       | Path to SSL root certificate        | —       |
 
-### Column Mappings
+Use the following options to specify details about column mappings:
 
-Map document data to table columns. At least one column must be specified:
-
-- **col-doc-title**: Column for document title (TEXT)
-- **col-doc-content**: Column for converted Markdown content (TEXT)
-- **col-source-content**: Column for original source (BYTEA)
-- **col-file-name**: Column for filename (TEXT)
-- **col-file-created**: Column for file creation timestamp (TIMESTAMP)
-- **col-file-modified**: Column for file modification timestamp (TIMESTAMP)
-- **col-row-created**: Column for row creation timestamp (TIMESTAMP)
-- **col-row-updated**: Column for row update timestamp (TIMESTAMP)
+| Option             | Required | Description                                            | Default |
+|--------------------|----------|--------------------------------------------------------|---------|
+| col-doc-title      | No       | Column for document title (TEXT)                       | —       |
+| col-doc-content    | No       | Column for converted Markdown content (TEXT)           | —       |
+| col-source-content | No       | Column for original source (BYTEA)                     | —       |
+| col-file-name      | No       | Column for filename (TEXT)                             | —       |
+| col-file-created   | No       | Column for file creation timestamp (TIMESTAMP)         | —       |
+| col-file-modified  | No       | Column for file modification timestamp (TIMESTAMP)     | —       |
+| col-row-created    | No       | Column for row creation timestamp (TIMESTAMP)          | —       |
+| col-row-updated    | No       | Column for row update timestamp (TIMESTAMP)            | —       |
 
 ### Custom Metadata Columns
 
-Add fixed values to custom columns for every row inserted. This is useful
-for storing multiple documentation sets in a single table with distinguishing
-metadata.
+You can add fixed values to custom columns for each row inserted. This is useful for storing multiple documentation sets in a single table with distinguishing metadata.
 
-**Configuration file format:**
+Within the configuration file, use the following format:
 
 ```yaml
 custom-columns:
@@ -97,71 +112,18 @@ custom-columns:
   environment: "production"
 ```
 
-**Command-line format:**
+To specify metadata columns on the command line, include the following options:
 
 ```bash
 pgedge-docloader --set-column product="pgAdmin 4" --set-column version="v9.9"
 ```
 
-The `--set-column` flag can be specified multiple times. Command-line values
-override config file values for the same column name.
+You can specify the `--set-column` flag multiple times. Command-line values override configuration file values for the same column name.
 
-### Operation Mode
 
-- **update**: Enable update mode - update existing rows (matched by
-  filename) or insert new ones (default: false)
+## Specifying Options on the Command-Line
 
-## Password Configuration
-
-Database passwords are never stored in configuration files. The tool obtains
-passwords in this order of priority:
-
-1. **PGPASSWORD environment variable**
-
-   ```bash
-   export PGPASSWORD=mypassword
-   pgedge-docloader --config config.yml
-   ```
-
-2. **~/.pgpass file** (format: `hostname:port:database:username:password`)
-
-   ```
-   localhost:5432:mydb:myuser:mypassword
-   ```
-
-   Ensure proper permissions:
-
-   ```bash
-   chmod 600 ~/.pgpass
-   ```
-
-3. **Passwordless authentication** - If no password is found, the tool will
-   attempt to connect without one, allowing PostgreSQL to use configured
-   authentication methods such as:
-   - Trust authentication
-   - Peer authentication
-   - Certificate-based authentication (using `db-sslcert` and `db-sslkey`)
-
-If a password is required but not provided through PGPASSWORD or .pgpass,
-PostgreSQL will return an authentication error with a clear message.
-
-## Path Resolution
-
-When using a configuration file, relative paths are resolved relative to the
-configuration file's directory. For example:
-
-```yaml
-source: ../docs              # Relative to config file
-db-sslcert: ./certs/client.pem  # Relative to config file
-```
-
-Without a configuration file, relative paths are relative to the current
-working directory.
-
-## Command-Line Flags
-
-All configuration options have corresponding command-line flags. Use
-`--help` to see all available flags:
+All configuration options have corresponding command-line flags. Use `--help` to see all available flags:
 
 ```bash
 pgedge-docloader --help
@@ -169,9 +131,44 @@ pgedge-docloader --help
 
 Command-line flags override configuration file values.
 
-## Example Configurations
 
-### Minimal Configuration
+## Specifying a Password
+
+Database passwords are never stored in a configuration file. The tool obtains passwords in this order of priority:
+
+1. pgEdge Document Loader first checks the `PGPASSWORD` environment variable:
+
+   ```bash
+   export PGPASSWORD=mypassword
+   pgedge-docloader --config config.yml
+   ```
+
+2. It then checks the [`~/.pgpass file`](https://www.postgresql.org/docs/18/libpq-pgpass.html) for an entry:
+
+   ```
+   localhost:5432:mydb:myuser:mypassword
+   ```
+
+   Your `/.pgpass` file must have proper permissions:
+
+   ```bash
+   chmod 600 ~/.pgpass
+   ```
+
+!!! note
+
+    If a password is required but not provided through `PGPASSWORD` or `.pgpass`, PostgreSQL will return an authentication error with a clear message.
+
+3. If Document Loader doesn't find a password in the two previous locations, it then attempts passwordless authentication. This allows PostgreSQL to use configured authentication methods such as:
+
+   - Trust authentication
+   - Peer authentication
+   - Certificate-based authentication (using `db-sslcert` and `db-sslkey`)
+
+
+## Examples
+
+The following options specify the minimal configuration required by Document Loader:
 
 ```yaml
 source: "./docs/*.md"
@@ -183,7 +180,7 @@ col-doc-content: content
 col-file-name: filename
 ```
 
-### Full Configuration
+The following options specify a complete configuration:
 
 ```yaml
 source: "./documentation"
@@ -214,7 +211,3 @@ custom-columns:
 update: true
 ```
 
-## Next Steps
-
-- [Usage](usage.md) - Learn how to run the tool
-- [Database Setup](database-setup.md) - Create appropriate database tables

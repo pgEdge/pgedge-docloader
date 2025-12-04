@@ -54,12 +54,13 @@ nav:
       - Introduction: index.md
       - Best Practices: best_practices.md
   - Getting Started:
-      - pgEdge Document Loader Quickstart: quickstart.md
       - Installation: installation.md
       - Configuration: configuration.md
+      - pgEdge Document Loader Quickstart: quickstart.md
       - Document Storage Strategies: database-setup.md
   - Using pgEdge Document Loader:
       - Usage: usage.md
+      - Updating a Stored Document: updating.md
   - Supported Formats:
       - HTML: html.md
       - Markdown: markdown.md
