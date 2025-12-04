@@ -99,7 +99,7 @@ All configuration options have corresponding command-line flags. Use `--help` to
 pgedge-docloader --help
 ```
 
-The following command demonstrates specifying options on the command line:
+The following command demonstrates specifying options on the command line; in the command, each command line option is followed by the column name in which the content will be stored:
 
 ```bash
 pgedge-docloader \
@@ -118,6 +118,8 @@ pgedge-docloader \
 ```
 
 Command-line flags override configuration file values.
+
+FIXME - Add table of --help options with field names?
 
 
 ## Using Custom Metadata Columns

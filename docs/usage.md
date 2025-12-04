@@ -87,6 +87,12 @@ The `**` pattern recursively matches all subdirectories. For example:
 - `docs/**/*.md` - All .md files in docs and all subdirectories
 - `docs/*.md` - Only .md files directly in docs (not subdirectories)
 
+For example, the following command loads all Markdown documents found in the `docs` subdirectory using the configuration preferences specified in the `config.yml` file:
+
+```bash
+pgedge-docloader --source "./docs/*.md" --config config.yml
+```
+
 **Saving Multiple Documents in a Single Table**
 
 The following commands store documentation for multiple products in the same table:
@@ -130,41 +136,6 @@ pgedge-docloader --config config.yml --source /different/path
 You can map any combination of columns. The tool will only populate the columns you specify.
 
 
-## Adding Custom Metadata Columns
-
-You can use metadata columns to add fixed values to custom columns for each row inserted. This is useful for storing multiple documentation sets in a single table.
-
-**Using command-line options to add metadata columns:**
-
-```bash
-pgedge-docloader \
-  --source ./docs/pgadmin \
-  --config base-config.yml \
-  --set-column product="pgAdmin 4" \
-  --set-column version="v9.9" \
-  --set-column environment="production"
-```
-
-**Using a configuration file to add metadata columns:**
-
-```yaml
-source: "./docs/pgadmin"
-db-host: localhost
-db-name: docdb
-db-user: docuser
-db-table: all_docs
-col-doc-content: content
-col-file-name: filename
-
-custom-columns:
-  product: "pgAdmin 4"
-  version: "v9.9"
-  environment: "production"
-```
-
-You can specify the `--set-column` flag multiple times. Command-line values override configuration file values for the same column name.
-
-
 ## Processing Summary
 
 After processing, the tool displays a summary:
@@ -186,47 +157,20 @@ Rows updated:    0
 
 If any error occurs during processing or database operations:
 
-- All database changes are rolled back (nothing is committed)
-- The tool exits with a non-zero status code
-- A detailed error message is displayed
+- All database changes are rolled back (nothing is committed).
+- The tool exits with a non-zero status code.
+- A detailed error message is displayed.
 
-Example:
+For example:
 
 ```
 Error: failed to insert documents: pq: duplicate key value violates
 unique constraint "documents_filename_key"
 ```
 
-## Advanced Examples
+## Automated Sync with Cron
 
-### Load Only Markdown Files
-
-```bash
-pgedge-docloader --source "./docs/*.md" --config config.yml
-```
-
-### Load with Full Metadata
-
-```bash
-pgedge-docloader \
-  --source ./docs \
-  --db-host localhost \
-  --db-name mydb \
-  --db-user myuser \
-  --db-table knowledge_base \
-  --col-doc-title title \
-  --col-doc-content content_markdown \
-  --col-source-content content_original \
-  --col-file-name source_file \
-  --col-file-modified file_modified_at \
-  --col-row-created created_at \
-  --col-row-updated updated_at \
-  --update
-```
-
-### Automated Sync with Cron
-
-Add to crontab for regular updates:
+You can add pgEdge Document Loader to `crontab` to perform regular updates.  For example:
 
 ```cron
 # Sync documentation every hour

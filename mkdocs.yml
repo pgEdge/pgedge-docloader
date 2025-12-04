@@ -59,6 +59,7 @@ nav:
       - pgEdge Document Loader Quickstart: quickstart.md
       - Managing Authentication: authentication.md
       - Document Storage Strategies: database-setup.md
+      - Adding Custom Metadata Columns: metadata.md
   - Using pgEdge Document Loader:
       - Usage: usage.md
       - Updating a Stored Document: updating.md
