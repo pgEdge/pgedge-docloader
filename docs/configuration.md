@@ -2,15 +2,6 @@
 
 The pgEdge Document Loader can be deployed with preferences saved in a [YAML configuration file](#specifying-options-in-a-configuration-file) and/or [command-line flags](#specifying-options-on-the-command-line). 
 
-When using a configuration file, paths are resolved relative to the configuration file's directory. For example:
-
-```yaml
-source: ../docs              # Relative to config file
-db-sslcert: ./certs/client.pem  # Relative to config file
-```
-
-When invoked without a configuration file, paths are relative to the current working directory.
-
 !!! note
 
     Command-line flags always take precedence over configuration file settings.
@@ -99,7 +90,37 @@ Use the following options to specify details about column mappings:
 | col-row-created    | No       | Column for row creation timestamp (TIMESTAMP)          | —       |
 | col-row-updated    | No       | Column for row update timestamp (TIMESTAMP)            | —       |
 
-### Custom Metadata Columns
+
+## Specifying Options on the Command-Line
+
+All configuration options have corresponding command-line flags. Use `--help` to see all available flags:
+
+```bash
+pgedge-docloader --help
+```
+
+The following command demonstrates specifying options on the command line:
+
+```bash
+pgedge-docloader \
+  --source ./docs \
+  --db-host localhost \
+  --db-name mydb \
+  --db-user myuser \
+  --db-table documents \
+  --col-doc-title title \
+  --col-doc-content content \
+  --col-source-content original \
+  --col-file-name filename \
+  --col-file-modified modified_at \
+  --col-row-created created_at \
+  --col-row-updated updated_at
+```
+
+Command-line flags override configuration file values.
+
+
+## Using Custom Metadata Columns
 
 You can add fixed values to custom columns for each row inserted. This is useful for storing multiple documentation sets in a single table with distinguishing metadata.
 
@@ -119,51 +140,6 @@ pgedge-docloader --set-column product="pgAdmin 4" --set-column version="v9.9"
 ```
 
 You can specify the `--set-column` flag multiple times. Command-line values override configuration file values for the same column name.
-
-
-## Specifying Options on the Command-Line
-
-All configuration options have corresponding command-line flags. Use `--help` to see all available flags:
-
-```bash
-pgedge-docloader --help
-```
-
-Command-line flags override configuration file values.
-
-
-## Specifying a Password
-
-Database passwords are never stored in a configuration file. The tool obtains passwords in this order of priority:
-
-1. pgEdge Document Loader first checks the `PGPASSWORD` environment variable:
-
-   ```bash
-   export PGPASSWORD=mypassword
-   pgedge-docloader --config config.yml
-   ```
-
-2. It then checks the [`~/.pgpass file`](https://www.postgresql.org/docs/18/libpq-pgpass.html) for an entry:
-
-   ```
-   localhost:5432:mydb:myuser:mypassword
-   ```
-
-   Your `/.pgpass` file must have proper permissions:
-
-   ```bash
-   chmod 600 ~/.pgpass
-   ```
-
-!!! note
-
-    If a password is required but not provided through `PGPASSWORD` or `.pgpass`, PostgreSQL will return an authentication error with a clear message.
-
-3. If Document Loader doesn't find a password in the two previous locations, it then attempts passwordless authentication. This allows PostgreSQL to use configured authentication methods such as:
-
-   - Trust authentication
-   - Peer authentication
-   - Certificate-based authentication (using `db-sslcert` and `db-sslkey`)
 
 
 ## Examples
@@ -210,4 +186,3 @@ custom-columns:
 
 update: true
 ```
-

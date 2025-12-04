@@ -57,6 +57,7 @@ nav:
       - Installation: installation.md
       - Configuration: configuration.md
       - pgEdge Document Loader Quickstart: quickstart.md
+      - Managing Authentication: authentication.md
       - Document Storage Strategies: database-setup.md
   - Using pgEdge Document Loader:
       - Usage: usage.md

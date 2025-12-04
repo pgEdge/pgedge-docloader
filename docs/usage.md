@@ -1,10 +1,45 @@
 # Usage
 
-This guide covers common usage patterns for the pgEdge Document Loader.
+This guide covers common usage patterns for the pgEdge Document Loader.  To review online help, use the command:
 
-## Basic Usage
+```bash
+pgedge-docloader --help
+```
 
-### Load a Single File
+## Specifying Path Values
+
+By default, the full path is stored in the filename column. When using a configuration file, paths are resolved relative to the configuration file's directory. For example:
+
+```yaml
+source: ../docs              # Relative to config file
+db-sslcert: ./certs/client.pem  # Relative to config file
+```
+
+When invoked without a configuration file, paths are relative to the current working directory.  You can include the `--strip-path` command option on the command line to store only the base filename in your Postgres table:
+
+```bash
+pgedge-docloader \
+  --source /long/path/to/docs \
+  --strip-path \
+  --db-host localhost \
+  --db-name mydb \
+  --db-user myuser \
+  --db-table documents \
+  --col-file-name filename
+```
+
+Including the `--strip-path` option, instructs Document Loader to save `/long/path/to/docs/file_name.md` as `file_name.md`.
+
+!!! note
+
+    Command-line flags always take precedence over configuration file settings.
+
+
+## Using pgEdge Document Loader
+
+**Loading a Single Document**
+
+The following command demonstrates loading a single document:
 
 ```bash
 pgedge-docloader \
@@ -17,9 +52,9 @@ pgedge-docloader \
   --col-file-name filename
 ```
 
-### Load a Directory
+**Loading all of the Documents in a Directory**
 
-Load all supported files in a directory:
+The following command loads all of the supported documents in a directory:
 
 ```bash
 pgedge-docloader \
@@ -32,10 +67,9 @@ pgedge-docloader \
   --col-file-name filename
 ```
 
-### Load with Glob Pattern
+**Loading Documents that Match a Specified Pattern**
 
-Load files matching a pattern. Use `**` for recursive matching across all
-subdirectories:
+The following command loads all documents that match a specified pattern. Use `**` for recursive matching across all subdirectories:
 
 ```bash
 pgedge-docloader \
@@ -53,113 +87,9 @@ The `**` pattern recursively matches all subdirectories. For example:
 - `docs/**/*.md` - All .md files in docs and all subdirectories
 - `docs/*.md` - Only .md files directly in docs (not subdirectories)
 
-## Using a Configuration File
+**Saving Multiple Documents in a Single Table**
 
-Create a configuration file and use it:
-
-```bash
-pgedge-docloader --config config.yml
-```
-
-Override config file settings with command-line flags:
-
-```bash
-pgedge-docloader --config config.yml --source /different/path
-```
-
-## Update Mode
-
-In update mode, the tool updates existing rows (matched by filename) or
-inserts new ones:
-
-```bash
-pgedge-docloader \
-  --config config.yml \
-  --update
-```
-
-This is useful for keeping the database in sync with document changes.
-
-## Stripping Paths
-
-By default, the full path is stored in the filename column. Use
-`--strip-path` to store only the base filename:
-
-```bash
-pgedge-docloader \
-  --source /long/path/to/docs \
-  --strip-path \
-  --db-host localhost \
-  --db-name mydb \
-  --db-user myuser \
-  --db-table documents \
-  --col-file-name filename
-```
-
-With `--strip-path`, `/long/path/to/docs/file.md` becomes `file.md`.
-
-## Column Mapping
-
-Map document data to different table columns:
-
-```bash
-pgedge-docloader \
-  --source ./docs \
-  --db-host localhost \
-  --db-name mydb \
-  --db-user myuser \
-  --db-table documents \
-  --col-doc-title title \
-  --col-doc-content content \
-  --col-source-content original \
-  --col-file-name filename \
-  --col-file-modified modified_at \
-  --col-row-created created_at \
-  --col-row-updated updated_at
-```
-
-You can map any combination of columns. The tool will only populate the
-columns you specify.
-
-## Custom Metadata Columns
-
-Add fixed values to custom columns for every row inserted. This is useful for
-storing multiple documentation sets in a single table:
-
-**Using command-line flags:**
-
-```bash
-pgedge-docloader \
-  --source ./docs/pgadmin \
-  --config base-config.yml \
-  --set-column product="pgAdmin 4" \
-  --set-column version="v9.9" \
-  --set-column environment="production"
-```
-
-**Using configuration file:**
-
-```yaml
-source: "./docs/pgadmin"
-db-host: localhost
-db-name: docdb
-db-user: docuser
-db-table: all_docs
-col-doc-content: content
-col-file-name: filename
-
-custom-columns:
-  product: "pgAdmin 4"
-  version: "v9.9"
-  environment: "production"
-```
-
-The `--set-column` flag can be specified multiple times. Command-line values
-override config file values for the same column name.
-
-### Example: Multiple Documentation Sets
-
-Store documentation for different products in the same table:
+The following commands store documentation for multiple products in the same table:
 
 ```bash
 # Load pgAdmin documentation
@@ -177,91 +107,63 @@ pgedge-docloader \
   --set-column version="v2.5"
 ```
 
-Then query by product:
+Then, when you query the table, you can specify a value for the `product` column to retrieve content from `pgAdmin 4`:
 
 ```sql
 SELECT title, content FROM all_docs WHERE product = 'pgAdmin 4';
 ```
 
-## SSL/TLS Connections
+**Using Document Loader with a Configuration File**
 
-Connect using SSL/TLS with client certificates:
+The following command invokes Document Loader while specifying preferences in a [configuration file](configuration.md) named `config.yml`:
+
+```bash
+pgedge-docloader --config config.yml
+```
+
+You can override configuration file settings with command-line flags; command-line preferences always take precedence over options specified in a configuration file:
+
+```bash
+pgedge-docloader --config config.yml --source /different/path
+```
+
+You can map any combination of columns. The tool will only populate the columns you specify.
+
+
+## Adding Custom Metadata Columns
+
+You can use metadata columns to add fixed values to custom columns for each row inserted. This is useful for storing multiple documentation sets in a single table.
+
+**Using command-line options to add metadata columns:**
 
 ```bash
 pgedge-docloader \
-  --source ./docs \
-  --db-host secure.example.com \
-  --db-name mydb \
-  --db-user myuser \
-  --db-table documents \
-  --db-sslmode verify-full \
-  --db-sslcert ./certs/client.pem \
-  --db-sslkey ./certs/client-key.pem \
-  --db-sslrootcert ./certs/ca.pem \
-  --col-doc-content content \
-  --col-file-name filename
+  --source ./docs/pgadmin \
+  --config base-config.yml \
+  --set-column product="pgAdmin 4" \
+  --set-column version="v9.9" \
+  --set-column environment="production"
 ```
 
-SSL modes:
+**Using a configuration file to add metadata columns:**
 
-- `disable` - No SSL
-- `allow` - Try SSL, fall back to non-SSL
-- `prefer` - Try SSL, fall back to non-SSL (default)
-- `require` - Require SSL, but don't verify certificates
-- `verify-ca` - Require SSL and verify CA certificate
-- `verify-full` - Require SSL and verify certificate and hostname
+```yaml
+source: "./docs/pgadmin"
+db-host: localhost
+db-name: docdb
+db-user: docuser
+db-table: all_docs
+col-doc-content: content
+col-file-name: filename
 
-## Password Options
-
-### Using Environment Variable
-
-```bash
-export PGPASSWORD=mypassword
-pgedge-docloader --config config.yml
+custom-columns:
+  product: "pgAdmin 4"
+  version: "v9.9"
+  environment: "production"
 ```
 
-### Using .pgpass File
+You can specify the `--set-column` flag multiple times. Command-line values override configuration file values for the same column name.
 
-Create `~/.pgpass`:
-
-```
-localhost:5432:mydb:myuser:mypassword
-```
-
-Set permissions:
-
-```bash
-chmod 600 ~/.pgpass
-```
-
-### Interactive Prompt
-
-If no password is found, the tool will prompt:
-
-```bash
-pgedge-docloader --config config.yml
-Enter database password: ****
-```
-
-## Viewing Help
-
-Get help on all command-line options:
-
-```bash
-pgedge-docloader --help
-```
-
-Get version information:
-
-```bash
-pgedge-docloader version
-```
-
-List supported document formats:
-
-```bash
-pgedge-docloader formats
-```
 
 ## Processing Summary
 
