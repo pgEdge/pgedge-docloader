@@ -50,7 +50,8 @@ copyright: Copyright &copy; 2025 pgEdge, Inc
 repo_url: https://github.com/pgEdge/pgedge-mcp
 
 nav:
-  - Introduction: index.md
+  - Introduction:
+      - Introduction: index.md
       - Best Practices: best_practices.md
   - Getting Started:
       - pgEdge Document Loader Quickstart: quickstart.md
@@ -59,6 +60,10 @@ nav:
       - Document Storage Strategies: database-setup.md
   - Using pgEdge Document Loader:
       - Usage: usage.md
+  - Supported Formats: 
       - Supported Formats: supported-formats.md
+      - HTML: html.md
+      - Markdown: markdown.md
+      - RST: rst.md  
   - Troubleshooting: troubleshooting.md
 

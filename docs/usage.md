@@ -333,6 +333,5 @@ Add to crontab for regular updates:
 
 ## Next Steps
 
-- [Supported Formats](supported-formats.md) - Learn about document format
-  support
-- [Troubleshooting](troubleshooting.md) - Common issues and solutions
+- [Supported Formats](supported_formats/supported-formats.md) - Learn about document format support.
+- [Troubleshooting](troubleshooting.md) - Common issues and solutions.
