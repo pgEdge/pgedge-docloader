@@ -10,6 +10,14 @@ During a reStructuredText conversion:
 - RST anchors and directives are stripped from both titles and headings
 - Both underline-only and overline+underline headings are supported
 
+!!! note
+
+    - Complex RST directives are not fully supported
+    - Only basic conversion is performed
+    - Advanced features (tables, code blocks with options) may not convert perfectly
+    - Image options like width, height, and alignment are not preserved in the Markdown output
+
+
 **Example with directives:**
 
 RST heading with directive:
