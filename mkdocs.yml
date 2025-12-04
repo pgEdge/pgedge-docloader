@@ -60,10 +60,10 @@ nav:
       - Document Storage Strategies: database-setup.md
   - Using pgEdge Document Loader:
       - Usage: usage.md
-  - Supported Formats: 
-      - Supported Formats: supported-formats.md
+  - Supported Formats:
       - HTML: html.md
       - Markdown: markdown.md
-      - RST: rst.md  
+      - RST: rst.md
+      - Dealing with Unsupported Formats: unsupported-formats.md
   - Troubleshooting: troubleshooting.md
 

@@ -1,12 +1,10 @@
-# Supported Document Formats
+# Unsupported Formats
 
-The pgEdge Document Loader supports multiple document formats. All formats are automatically detected and converted to Markdown.  Format detection is based solely on the file extension (case-insensitive):
+The pgEdge Document Loader supports multiple document formats. The following formats are automatically detected and converted to Markdown.  Format detection is based solely on the file extension (case-insensitive); for details about each supported format type, visit:
 
-- `document.html` → Detected as HTML
-- `README.md` → Detected as Markdown
-- `guide.rst` → Detected as reStructuredText
-
-## Unsupported Formats
+- `document.html` → [Detected as HTML](html.md)
+- `README.md` → [Detected as Markdown](markdown.md)
+- `guide.rst` → [Detected as reStructuredText](rst.md)
 
 !!! note
 
@@ -20,7 +18,7 @@ The following document formats are **not** supported:
 - Plain text (`.txt`)
 - LaTeX (`.tex`)
 
-Use the following command to list all currently supported formats:
+Use the following command to return an up-to-date list of all currently supported formats:
 
 ```bash
 $ pgedge-docloader formats
@@ -58,18 +56,3 @@ Potential formats for future support:
 - OpenDocument (`.odt`)
 - EPUB (`.epub`)
 - AsciiDoc (`.adoc`)
-
-
-### Limitations
-
-- Complex RST directives are not fully supported
-- Only basic conversion is performed
-- Advanced features (tables, code blocks with options) may not convert
-  perfectly
-- Image options like width, height, and alignment are not preserved in the
-  Markdown output
-
-
-
-
-

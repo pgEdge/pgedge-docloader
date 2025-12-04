@@ -330,8 +330,3 @@ Add to crontab for regular updates:
 # Sync documentation every hour
 0 * * * * /usr/local/bin/pgedge-docloader --config /etc/docloader/config.yml --update
 ```
-
-## Next Steps
-
-- [Supported Formats](supported_formats/supported-formats.md) - Learn about document format support.
-- [Troubleshooting](troubleshooting.md) - Common issues and solutions.
