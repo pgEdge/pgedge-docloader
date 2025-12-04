@@ -69,4 +69,5 @@ nav:
       - RST: rst.md
       - Dealing with Unsupported Formats: unsupported-formats.md
   - Troubleshooting: troubleshooting.md
+  - Licence: LICENCE.md
 
