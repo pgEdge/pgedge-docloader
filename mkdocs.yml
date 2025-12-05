@@ -64,9 +64,11 @@ nav:
       - Updating a Document: updating.md
       - Managing Authentication: authentication.md
   - Supported Formats:
-      - HTML: html.md
+      - HTML or HTM: html.md
       - Markdown: markdown.md
       - RST: rst.md
+      # - XML: xml.md 
+      # - SGML: sgml.md
       - Dealing with Unsupported Formats: unsupported-formats.md
   - Troubleshooting: troubleshooting.md
   - Licence: LICENCE.md
