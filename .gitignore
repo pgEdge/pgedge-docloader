@@ -41,3 +41,4 @@ testdata/output/
 bin/
 dist/
 build/
+.claude/settings.local.json
