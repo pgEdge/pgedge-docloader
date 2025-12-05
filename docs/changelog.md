@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-alpha2] - 2025-12-05
+## [1.0.0-alpha3] - 2025-12-05
 
 ### Added
 
@@ -29,13 +29,23 @@ and this project adheres to
     - HTML entities automatically decoded
     - Comments and DOCTYPE declarations stripped
 
+- Changelog documentation
+
 ### Changed
 
 - Updated command description to list correct supported formats
+- Improved README documentation formatting and consistency
 
 ### Fixed
 
 - Command help text incorrectly mentioned PDF support (not implemented)
+- Fixed licence URL in documentation
+
+## [1.0.0-alpha2] - 2025-01-20
+
+### Added
+
+- Release workflow using goreleaser for automated builds on release tags
 
 ## [1.0.0-alpha1] - 2025-01-15
 
