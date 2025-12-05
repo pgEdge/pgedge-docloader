@@ -2,16 +2,34 @@
 
 [![CI](https://github.com/pgEdge/pgedge-docloader/actions/workflows/ci.yml/badge.svg)](https://github.com/pgEdge/pgedge-docloader/actions/workflows/ci.yml)
 
-A command-line tool for loading documents from various formats into PostgreSQL
-databases.
+  - [Introduction](docs/index.md)
+      - [Best Practices](docs/best_practices.md)
+  - Installing pgEdge Document Loader
+      - [Configuring the Postgres Database](docs/database-setup.md)
+      - [Installing Document Loader](docs/installation.md)
+      - [Document Loader Configuration](docs/configuration.md)
+      - [pgEdge Document Loader Quickstart](docs/quickstart.md)
+  - Using pgEdge Document Loader
+      - [Using Document Loader](docs/usage.md)
+      - [Using Custom Metadata Columns](docs/metadata.md)
+      - [Updating a Document](docs/updating.md)
+      - [Managing Authentication](docs/authentication.md)
+  - Supported Formats
+      - [Supported vs. Unsupported Formats](docs/unsupported-formats.md)
+      - [HTML or HTM](docs/html.md)
+      - [Markdown](docs/markdown.md)
+      - [RST](docs/rst.md)
+      - [SGML](docs/sgml.md)
+  - [Troubleshooting](docs/troubleshooting.md)
+  - [Licence](docs/LICENCE.md)
 
-## Overview
+pgEdge Document Loader is a command-line tool for loading documents from various formats into PostgreSQL databases.  Full documentation is available at:
 
-The pgEdge Document Loader automatically converts documents (HTML, Markdown,
-and reStructuredText) to Markdown format and loads them into a PostgreSQL
-database with extracted metadata.
+[https://pgedge.github.io/pgedge-docloader](https://pgedge.github.io/pgedge-docloader)
 
-## Features
+The pgEdge Document Loader automatically converts documents (HTML, Markdown, and reStructuredText) to Markdown format and loads them into a PostgreSQL database with extracted metadata.
+
+**Features**
 
 - **Multiple Format Support**: HTML, Markdown, and reStructuredText
 - **Automatic Conversion**: All formats converted to Markdown
@@ -24,9 +42,22 @@ database with extracted metadata.
 - **Secure**: Password from environment, .pgpass, or interactive prompt
 - **Configuration Files**: Reusable YAML configuration
 
-## Quick Start
+## Document Loader Quickstart
 
-### Installation
+Before installing and using pgEdge Document Loader, download and install:
+
+- Go 1.21 or later
+- PostgreSQL 12 or later
+
+Getting started with pgEdge Document Loader involves three steps:
+
+1. Install the tool.
+2. Create a table in your Postgres database to hold the loaded content.
+3. Run the `pgedge-docloader` executable.
+
+**Installing pgEdge Document Loader**
+
+Use the following commands to [download and build `pgedge-docloader`](/docs/installation.md):
 
 ```bash
 git clone https://github.com/pgedge/pgedge-docloader.git
@@ -35,7 +66,27 @@ make build
 make install
 ```
 
-### Basic Usage
+**Creating a Postgres Table**
+
+Before invoking Document Loader, you must configure a Postgres database and create a table with the [appropriate columns](/docs/database-setup.md) to hold the extracted documentation content:
+
+```sql
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    content TEXT NOT NULL,
+    source BYTEA,
+    filename TEXT UNIQUE,
+    modified TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Invoking pgedge-docloader**
+
+When invoking `pgedge-docloader`, you can [specify configuration preferences on the command line](/docs/configuration.md#specifying-options-on-the-command-line), or with a [configuration file](/docs/configuration.md#specifying-options-in-a-configuration-file).  
+
+The following command [invokes Document Loader on the command line](/docs/usage.md):
 
 ```bash
 # Load Markdown files into PostgreSQL
@@ -49,7 +100,7 @@ pgedge-docloader \
   --col-file-name filename
 ```
 
-### Using Configuration File
+To manage deployment preferences in a [configuration file](/docs/configuration.md#specifying-options-in-a-configuration-file), save your deployment details in a file, and then include the `--config` keyword when invoking `pgedge-docloader`:
 
 ```bash
 # Create config.yml
@@ -64,136 +115,41 @@ col-file-name: filename
 update: true
 EOF
 
-# Run with config
+# Run with a configuration file
 export PGPASSWORD=mypassword
 pgedge-docloader --config config.yml
 ```
 
-## Supported Formats
+For a comprehensive Quickstart Guide, visit [here](/docs/quickstart.md).
 
-- **HTML** (`.html`, `.htm`) - Extracts title from `<title>` tag
-- **Markdown** (`.md`) - Extracts title from first `#` heading
-- **reStructuredText** (`.rst`) - Converts to Markdown
+## Developer Notes
 
-## Documentation
+This project is under active development. See the documentation for the latest
+features and updates.
 
-Full documentation is available at:
-[https://pgedge.github.io/pgedge-docloader](https://pgedge.github.io/pgedge-docloader)
+The pgEdge Document Loader Makefile includes clauses that run test cases or invoke the go linter.  Use the following commands:
 
-- [Installation Guide](docs/installation.md)
-- [Configuration](docs/configuration.md)
-- [Usage Examples](docs/usage.md)
-- [Database Setup](docs/database-setup.md)
-- [Supported Formats](docs/supported-formats.md)
-- [Troubleshooting](docs/troubleshooting.md)
-
-## Requirements
-
-- Go 1.21 or later
-- PostgreSQL 12 or later
-
-## Database Setup
-
-Create a table with appropriate columns:
-
-```sql
-CREATE TABLE documents (
-    id SERIAL PRIMARY KEY,
-    title TEXT,
-    content TEXT NOT NULL,
-    source BYTEA,
-    filename TEXT UNIQUE,
-    modified TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-Map columns using CLI flags or configuration file.
-
-## Command-Line Options
-
-```
-Flags:
-  -c, --config string              Path to configuration file
-  -s, --source string              Source file, directory, or glob pattern
-      --strip-path                 Strip path from filename
-      --db-host string             Database host (default "localhost")
-      --db-port int                Database port (default 5432)
-      --db-name string             Database name
-      --db-user string             Database user
-      --db-table string            Database table name
-      --col-doc-title string       Column for document title
-      --col-doc-content string     Column for document content
-      --col-source-content string  Column for source content
-      --col-file-name string       Column for file name
-      --col-file-modified string   Column for file modified timestamp
-      --col-row-created string     Column for row created timestamp
-      --col-row-updated string     Column for row updated timestamp
-  -u, --update                     Update existing rows or insert new ones
-```
-
-## Examples
-
-### Load a directory
-
-```bash
-pgedge-docloader --source ./documentation --config config.yml
-```
-
-### Load with glob pattern
-
-```bash
-pgedge-docloader --source "./docs/**/*.md" --config config.yml
-```
-
-### Update mode
-
-```bash
-pgedge-docloader --source ./docs --config config.yml --update
-```
-
-## Development
-
-### Building
-
-```bash
-make build
-```
-
-The binary will be created at `bin/pgedge-docloader`. To test locally without
-installing:
-
-```bash
-./bin/pgedge-docloader --help
-```
-
-### Running Tests
+**Running Tests**
 
 ```bash
 make test
 ```
 
-### Linting
+**Linting**
 
 ```bash
 make lint
 ```
 
-## License
-
-This project is licensed under the PostgreSQL License. See
-[LICENCE.md](LICENCE.md) for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
+Your contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## Support
 
 - Documentation: [https://pgedge.github.io/pgedge-docloader](https://pgedge.github.io/pgedge-docloader)
 - Issues: [GitHub Issues](https://github.com/pgedge/pgedge-docloader/issues)
 
-## Project Status
+## License
 
-This project is under active development. See the documentation for the latest
-features and updates.
+This project is licensed under the PostgreSQL License. See
+[LICENCE.md](LICENCE.md) for details.
+
