@@ -24,7 +24,7 @@ Then, use `make` to ensure that your Go installation is configured properly:
 make deps
 ```
 
-Alternatively, you can use the command:
+Alternatively, you can use the following command to ensure that Go is installed:
 
 ```bash
 go mod download
@@ -36,20 +36,20 @@ Then, use `make` to build the Document Loader binary:
 make build
 ```
 
-The `make build` command creates the `pgedge-docloader` binary in the current directory.  If you'd prefer to install the binary in `/usr/local/bin`, use the command:
+The `make build` command creates the `pgedge-docloader` binary in the `/bin` directory in your current directory.  If you'd prefer to install the binary in `/usr/local/bin`, use the command:
 
 ```bash
 make install
 ```
 
-To install the binary in a custom location, specify the installation path with the `make` command:
+To install the binary in a custom location, specify the installation path when you run the `make` command:
 
 ```bash
 PREFIX=/opt/local make install
 ```
 **Verify the Installation**
 
-After building Document Loader, verify the tool is working by retrieving information about the tool:
+After building Document Loader, you can verify the installation worked by retrieving information about the tool:
 
 ```bash
 pgedge-docloader version
@@ -59,4 +59,8 @@ Check supported formats:
 
 ```bash
 pgedge-docloader formats
+```
+
+```bash
+pgedge-docloader help
 ```

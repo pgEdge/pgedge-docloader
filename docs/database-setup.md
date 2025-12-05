@@ -1,176 +1,22 @@
 # Database Setup
 
-This guide shows how to set up your PostgreSQL database for use with the
-pgEdge Document Loader.
+Before invoking pgEdge Document Loader, you need to install Postgres and create a table that will hold the document contents.  The tool can work with any table structure, as long as you map the columns appropriately.
 
-## Table Requirements
+This page will walk you through configuring your PostgreSQL database for use with the pgEdge Document Loader.  This page assumes you have installed Postgres version 12 or later.
 
-The tool can work with any table structure, as long as you map the
-appropriate columns. However, you must create the table before running the
-tool.
 
-## Example Table Schemas
+## Configuring the Postgres Database
 
-### Minimal Schema
-
-A minimal table with just content and filename:
+Use the following commands to configure your database:
 
 ```sql
-CREATE TABLE documents (
-    id SERIAL PRIMARY KEY,
-    content TEXT,
-    filename TEXT UNIQUE
-);
-```
-
-Use with:
-
-```bash
-pgedge-docloader \
-  --source ./docs \
-  --db-table documents \
-  --col-doc-content content \
-  --col-file-name filename \
-  ... other connection options ...
-```
-
-### Recommended Schema
-
-A recommended schema with full metadata:
-
-```sql
-CREATE TABLE documents (
-    id SERIAL PRIMARY KEY,
-    title TEXT,
-    content TEXT NOT NULL,
-    source BYTEA,
-    filename TEXT UNIQUE NOT NULL,
-    file_modified TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Index for faster lookups
-CREATE INDEX idx_documents_filename ON documents(filename);
-
--- Index for full-text search (optional)
-CREATE INDEX idx_documents_content_fts ON documents
-    USING gin(to_tsvector('english', content));
-```
-
-Use with:
-
-```bash
-pgedge-docloader \
-  --source ./docs \
-  --db-table documents \
-  --col-doc-title title \
-  --col-doc-content content \
-  --col-source-content source \
-  --col-file-name filename \
-  --col-file-modified file_modified \
-  --col-row-created created_at \
-  --col-row-updated updated_at \
-  ... other connection options ...
-```
-
-### Schema for Vector Search
-
-For use with pgvector (semantic search):
-
-```sql
--- Enable pgvector extension
-CREATE EXTENSION IF NOT EXISTS vector;
-
-CREATE TABLE documents (
-    id SERIAL PRIMARY KEY,
-    title TEXT,
-    content TEXT NOT NULL,
-    source BYTEA,
-    filename TEXT UNIQUE NOT NULL,
-    file_modified TIMESTAMP,
-    embedding vector(1536),  -- For OpenAI embeddings
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Index for vector similarity search
-CREATE INDEX idx_documents_embedding ON documents
-    USING ivfflat (embedding vector_cosine_ops);
-
--- Index for filename lookups
-CREATE INDEX idx_documents_filename ON documents(filename);
-```
-
-Note: The embedding column must be populated separately using an embedding
-model.
-
-## Column Data Types
-
-The tool expects the following data types for each column type:
-
-- **doc_title**: `TEXT` or `VARCHAR`
-- **doc_content**: `TEXT` or `VARCHAR`
-- **source_content**: `BYTEA` (binary data for storing original source)
-- **file_name**: `TEXT` or `VARCHAR` (recommend UNIQUE constraint for update
-  mode)
-- **file_created**: `TIMESTAMP` or `TIMESTAMPTZ`
-- **file_modified**: `TIMESTAMP` or `TIMESTAMPTZ`
-- **row_created**: `TIMESTAMP` or `TIMESTAMPTZ` (recommend DEFAULT
-  CURRENT_TIMESTAMP)
-- **row_updated**: `TIMESTAMP` or `TIMESTAMPTZ` (recommend DEFAULT
-  CURRENT_TIMESTAMP)
-
-## Update Mode Considerations
-
-When using `--update` mode:
-
-1. The `filename` column should have a UNIQUE constraint
-2. The tool matches existing rows by filename
-3. If a match is found, the row is updated
-4. If no match is found, a new row is inserted
-
-Example schema for update mode:
-
-```sql
-CREATE TABLE documents (
-    id SERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
-    filename TEXT UNIQUE NOT NULL,  -- UNIQUE constraint required
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## Permissions
-
-The database user must have the following permissions:
-
-```sql
--- Grant INSERT permission
-GRANT INSERT ON documents TO myuser;
-
--- Grant UPDATE permission (for --update mode)
-GRANT UPDATE ON documents TO myuser;
-
--- Grant SELECT permission (for checking existing rows)
-GRANT SELECT ON documents TO myuser;
-
--- Grant USAGE on sequence (for SERIAL columns)
-GRANT USAGE, SELECT ON SEQUENCE documents_id_seq TO myuser;
-```
-
-## Creating the Database
-
-Complete example of setting up a new database:
-
-```sql
--- Connect as superuser
+-- Connect as a superuser
 psql -U postgres
 
--- Create database
+-- Create the database
 CREATE DATABASE docdb;
 
--- Create user
+-- Create a user
 CREATE USER docloader WITH PASSWORD 'secure_password';
 
 -- Connect to the new database
@@ -198,9 +44,7 @@ CREATE INDEX idx_documents_content_fts ON documents
     USING gin(to_tsvector('english', content));
 ```
 
-## Verification
-
-Verify your setup:
+After configuring the database and creating a table, you can verify your setup with the following commands:
 
 ```sql
 -- Check table structure
@@ -222,9 +66,59 @@ SELECT * FROM documents WHERE filename = 'test.md';
 DELETE FROM documents WHERE filename = 'test.md';
 ```
 
-## Common Table Patterns
+The following command snippet references the table:
 
-### Simple Documentation Store
+```bash
+pgedge-docloader \
+  --source ./docs \
+  --db-table documents \
+  --col-doc-title title \
+  --col-doc-content content \
+  --col-source-content source \
+  --col-file-name filename \
+  --col-file-modified file_modified \
+  --col-row-created created_at \
+  --col-row-updated updated_at \
+
+  ... other connection options ...
+```
+
+### Creating a Table for Vector Searches
+
+The following commands create the vector extension, a table for use with pgvector (semantic search), and indexes:
+
+```sql
+-- Enable pgvector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    content TEXT NOT NULL,
+    source BYTEA,
+    filename TEXT UNIQUE NOT NULL,
+    file_modified TIMESTAMP,
+    embedding vector(1536),  -- For OpenAI embeddings
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for vector similarity search
+CREATE INDEX idx_documents_embedding ON documents
+    USING ivfflat (embedding vector_cosine_ops);
+
+-- Index for filename lookups
+CREATE INDEX idx_documents_filename ON documents(filename);
+```
+
+Note: The embedding column must be populated separately using an embedding model.
+
+
+## Examples - Common Table Patterns
+
+The following examples demonstrate some useful table configurations.
+
+**Simple Documentation Store**
 
 ```sql
 CREATE TABLE docs (
@@ -236,7 +130,7 @@ CREATE TABLE docs (
 );
 ```
 
-### Knowledge Base with Categories
+**Knowledge Base with Categories**
 
 ```sql
 CREATE TABLE knowledge_base (
@@ -253,7 +147,7 @@ CREATE TABLE knowledge_base (
 CREATE INDEX idx_kb_category ON knowledge_base(category);
 ```
 
-### Multi-language Documentation
+**Multi-language Documentation**
 
 ```sql
 CREATE TABLE documentation (
@@ -268,8 +162,3 @@ CREATE TABLE documentation (
 
 CREATE INDEX idx_docs_language ON documentation(language);
 ```
-
-## Next Steps
-
-- [Usage](usage.md) - Learn how to run the tool
-- [Configuration](configuration.md) - Set up your configuration file

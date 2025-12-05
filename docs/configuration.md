@@ -1,10 +1,26 @@
 # Configuration
 
-The pgEdge Document Loader can be deployed with preferences saved in a [YAML configuration file](#specifying-options-in-a-configuration-file) and/or [command-line flags](#specifying-options-on-the-command-line). 
+The pgEdge Document Loader can be deployed with preferences saved in a [YAML configuration file](#specifying-options-in-a-configuration-file) and/or specified on the command line with [command-line flags](#specifying-options-on-the-command-line).
 
 !!! note
 
     Command-line flags always take precedence over configuration file settings.
+
+
+## Column Data Types
+
+The tool expects the following Postgres data types for each column type:
+
+| Column         | Type                           | Notes                                       |
+|----------------|--------------------------------|---------------------------------------------|
+| doc_title      | TEXT or VARCHAR                | —                                           |
+| doc_content    | TEXT or VARCHAR                | —                                           |
+| source_content | BYTEA                          | Stores original source (binary)             |
+| file_name      | TEXT or VARCHAR                | Recommend UNIQUE constraint for update mode |
+| file_created   | TIMESTAMP or TIMESTAMPTZ       | —                                           |
+| file_modified  | TIMESTAMP or TIMESTAMPTZ       | —                                           |
+| row_created    | TIMESTAMP or TIMESTAMPTZ       | Recommend `DEFAULT CURRENT_TIMESTAMP`       |
+| row_updated    | TIMESTAMP or TIMESTAMPTZ       | Recommend `DEFAULT CURRENT_TIMESTAMP`       |
 
 
 ## Specifying Options in a Configuration File
@@ -49,48 +65,6 @@ Then, when you invoke `pgedge-docloader`, include the `--config` flag and the co
 pgedge-docloader --config config.yml
 ```
 
-### Configuration File Options
-
-Use the following options to specify details about the source document:
-
-| Option      | Required | Description                                         | Default |
-|-------------|----------|-----------------------------------------------------|---------|
-| source      | Yes      | Path to file, directory, or glob pattern            | —       |
-| strip-path  | No       | Remove directory path from filenames                | false   |
-
-Use the following options in a configuration file to specify details about the database connection:
-
-| Option     | Required | Description                                                       | Default     |
-|------------|----------|-------------------------------------------------------------------|-------------|
-| db-host    | No       | Database hostname                                                 | localhost   |
-| db-port    | No       | Database port                                                     | 5432        |
-| db-name    | Yes      | Database name                                                     | —           |
-| db-user    | Yes      | Database username                                                 | —           |
-| db-sslmode | No       | SSL mode (disable, allow, prefer, require, verify-ca, verify-full)| prefer      |
-| db-table   | Yes      | Target table name                                                 | —           |
-
-Use the following options to specify details about the SSL/TLS configuration:
-
-| Option         | Required | Description                         | Default |
-|----------------|----------|-------------------------------------|---------|
-| db-sslcert     | No       | Path to client SSL certificate      | —       |
-| db-sslkey      | No       | Path to client SSL key              | —       |
-| db-sslrootcert | No       | Path to SSL root certificate        | —       |
-
-Use the following options to specify details about column mappings:
-
-| Option             | Required | Description                                            | Default |
-|--------------------|----------|--------------------------------------------------------|---------|
-| col-doc-title      | No       | Column for document title (TEXT)                       | —       |
-| col-doc-content    | No       | Column for converted Markdown content (TEXT)           | —       |
-| col-source-content | No       | Column for original source (BYTEA)                     | —       |
-| col-file-name      | No       | Column for filename (TEXT)                             | —       |
-| col-file-created   | No       | Column for file creation timestamp (TIMESTAMP)         | —       |
-| col-file-modified  | No       | Column for file modification timestamp (TIMESTAMP)     | —       |
-| col-row-created    | No       | Column for row creation timestamp (TIMESTAMP)          | —       |
-| col-row-updated    | No       | Column for row update timestamp (TIMESTAMP)            | —       |
-
-
 ## Specifying Options on the Command-Line
 
 All configuration options have corresponding command-line flags. Use `--help` to see all available flags:
@@ -117,32 +91,55 @@ pgedge-docloader \
   --col-row-updated updated_at
 ```
 
-Command-line flags override configuration file values.
 
-FIXME - Add table of --help options with field names?
+## Reference - Configuration Options
 
+You can include the following options on the command-line or in a configuration file when invoking `pgedge-docloader`. Command-line flags override configuration file values.
 
-## Using Custom Metadata Columns
+Use the following options to specify details about the source document:
 
-You can add fixed values to custom columns for each row inserted. This is useful for storing multiple documentation sets in a single table with distinguishing metadata.
+| Option     | Required | Description                                  | Default |
+|------------|----------|----------------------------------------------|---------|
+| source     | Yes      | Path to file, directory, or glob pattern     | —       |
+| strip-path | No       | Remove directory path from filenames         | false   |
 
-Within the configuration file, use the following format:
+Use the following options to specify details about the database connection:
 
-```yaml
-custom-columns:
-  product: "pgAdmin 4"
-  version: "v9.9"
-  environment: "production"
-```
+| Option     | Required | Description                                                               | Default     |
+|------------|----------|---------------------------------------------------------------------------|-------------|
+| db-host    | No       | Database hostname                                                         | localhost   |
+| db-port    | No       | Database port                                                             | 5432        |
+| db-name    | Yes      | Database name                                                             | —           |
+| db-user    | Yes      | Database username                                                         | —           |
+| db-sslmode | No       | SSL mode (disable, allow, prefer, require, verify-ca, verify-full)        | prefer      |
+| db-table   | Yes      | Target table name                                                         | —           |
 
-To specify metadata columns on the command line, include the following options:
+Use the following options to specify details about the SSL/TLS configuration:
+
+| Option         | Required | Description                             | Default |
+|----------------|----------|-----------------------------------------|---------|
+| db-sslcert     | No       | Path to client SSL certificate          | —       |
+| db-sslkey      | No       | Path to client SSL key                  | —       |
+| db-sslrootcert | No       | Path to SSL root certificate            | —       |
+
+Use the following options to specify details about column mappings:
+
+| Option             | Required | Description                                            | Default |
+|--------------------|----------|--------------------------------------------------------|---------|
+| col-doc-title      | No       | Column for document title (TEXT)                       | —       |
+| col-doc-content    | No       | Column for converted Markdown content (TEXT)           | —       |
+| col-source-content | No       | Column for original source (BYTEA)                     | —       |
+| col-file-name      | No       | Column for filename (TEXT)                             | —       |
+| col-file-created   | No       | Column for file creation timestamp (TIMESTAMP)         | —       |
+| col-file-modified  | No       | Column for file modification timestamp (TIMESTAMP)     | —       |
+| col-row-created    | No       | Column for row creation timestamp (TIMESTAMP)          | —       |
+| col-row-updated    | No       | Column for row update timestamp (TIMESTAMP)            | —       |
+
+To review a list of options online, use the command:
 
 ```bash
-pgedge-docloader --set-column product="pgAdmin 4" --set-column version="v9.9"
+pgedge-docloader help
 ```
-
-You can specify the `--set-column` flag multiple times. Command-line values override configuration file values for the same column name.
-
 
 ## Examples
 

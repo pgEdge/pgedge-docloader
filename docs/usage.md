@@ -6,6 +6,16 @@ This guide covers common usage patterns for the pgEdge Document Loader.  To revi
 pgedge-docloader --help
 ```
 
+Note that your user must have `INSERT`, `UPDATE`, and `SELECT` permissions on the Postgres database on which the table resides; for example, you might use the following commands to grant permissions on the `documents` table and `documents_id_seq` sequence to the database user (`myuser`):
+
+```sql
+-- Grant required permissions for document loading and update mode
+GRANT INSERT, UPDATE, SELECT ON documents TO myuser;
+
+-- Grant USAGE on sequence (for SERIAL columns)
+GRANT USAGE, SELECT ON SEQUENCE documents_id_seq TO myuser;
+```
+
 ## Specifying Path Values
 
 By default, the full path is stored in the filename column. When using a configuration file, paths are resolved relative to the configuration file's directory. For example:
