@@ -53,16 +53,16 @@ nav:
   - Introduction:
       - Introduction: index.md
       - Best Practices: best_practices.md
-  - Getting Started:
+  - Installing pgEdge Document Loader:
+      - Configuring the Postgres Database: database-setup.md
       - Installation: installation.md
-      - Document Storage Strategies: database-setup.md
-      - Configuration: configuration.md
+      - Document Loader Configuration: configuration.md
       - Adding Custom Metadata Columns: metadata.md
       - pgEdge Document Loader Quickstart: quickstart.md
-      - Managing Authentication: authentication.md
   - Using pgEdge Document Loader:
-      - Usage: usage.md
-      - Updating a Stored Document: updating.md
+      - Using Document Loader: usage.md
+      - Updating a Document: updating.md
+      - Managing Authentication: authentication.md
   - Supported Formats:
       - HTML: html.md
       - Markdown: markdown.md

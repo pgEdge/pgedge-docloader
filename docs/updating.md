@@ -29,3 +29,12 @@ pgedge-docloader \
   --db-table documents \
   --update
 ```
+
+## Performing an Automated Sync with Cron
+
+You can add pgEdge Document Loader to `crontab` to perform regular updates.  For example:
+
+```cron
+# Sync documentation every hour
+0 * * * * /usr/local/bin/pgedge-docloader --config /etc/docloader/config.yml --update
+```

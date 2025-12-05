@@ -1,11 +1,8 @@
-# Database Setup
+# Configuring the Postgres Database
 
 Before invoking pgEdge Document Loader, you need to install Postgres and create a table that will hold the document contents.  The tool can work with any table structure, as long as you map the columns appropriately.
 
 This page will walk you through configuring your PostgreSQL database for use with the pgEdge Document Loader.  This page assumes you have installed Postgres version 12 or later.
-
-
-## Configuring the Postgres Database
 
 Use the following commands to configure your database:
 
@@ -83,7 +80,7 @@ pgedge-docloader \
   ... other connection options ...
 ```
 
-### Creating a Table for Vector Searches
+## Creating a Table for Vector Searches
 
 The following commands create the vector extension, a table for use with pgvector (semantic search), and indexes:
 
