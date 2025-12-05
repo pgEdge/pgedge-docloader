@@ -61,3 +61,6 @@ nav:
       - Supported Formats: supported-formats.md
       - Troubleshooting: troubleshooting.md
 
+  - Reference:
+      - Changelog: changelog.md
+

@@ -187,6 +187,112 @@ etc.) are ignored as they are not part of standard Markdown image syntax.
 - Image options like width, height, and alignment are not preserved in the
   Markdown output
 
+## SGML/DocBook Documents
+
+**Extensions:** `.sgml`, `.sgm`, `.xml`
+
+### Processing
+
+- Converted to Markdown format
+- Title extracted from `<title>` or `<refentrytitle>` tags (PostgreSQL-style
+  reference pages use `<refentrytitle>`)
+- DocBook section tags converted to Markdown headings:
+
+    - `<chapter>`, `<appendix>`, `<article>`, `<book>` → `#` (level 1)
+    - `<sect1>`, `<refsect1>`, `<refsynopsisdiv>`, `<section>` → `##`
+      (level 2)
+    - `<sect2>`, `<refsect2>` → `###` (level 3)
+    - `<sect3>`, `<refsect3>` → `####` (level 4)
+    - `<sect4>` → `#####` (level 5)
+    - `<sect5>` → `######` (level 6)
+
+- Inline code elements converted to backticks: `<literal>`, `<command>`,
+  `<filename>`, `<function>`, `<type>`, `<varname>`, `<option>`,
+  `<parameter>`, `<constant>`, `<replaceable>`
+- `<programlisting>` and `<screen>` converted to fenced code blocks
+- `<emphasis>` converted to italic (`*text*`)
+- Lists (`<itemizedlist>`, `<orderedlist>`) converted to Markdown lists
+- Links (`<ulink>`) converted to Markdown link format
+- Cross-references (`<xref>`) converted to inline code with the linkend
+- HTML entities automatically decoded
+- Comments and DOCTYPE declarations stripped
+
+### Example
+
+Input DocBook:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN">
+<book>
+<title>PostgreSQL Guide</title>
+<chapter>
+<title>Getting Started</title>
+<para>Use the <command>psql</command> command to connect.</para>
+<sect1>
+<title>Installation</title>
+<para>Download from <ulink url="https://postgresql.org">the website</ulink>.</para>
+</sect1>
+</chapter>
+</book>
+```
+
+Extracted title: `PostgreSQL Guide`
+
+Converted Markdown:
+
+```markdown
+# PostgreSQL Guide
+
+# Getting Started
+
+Use the `psql` command to connect.
+
+## Installation
+
+Download from [the website](https://postgresql.org).
+```
+
+### PostgreSQL Reference Pages
+
+The converter includes special handling for PostgreSQL-style reference pages
+using `<refentry>`:
+
+```xml
+<refentry>
+<refmeta><refentrytitle>SELECT</refentrytitle></refmeta>
+<refnamediv>
+<refname>SELECT</refname>
+<refpurpose>retrieve rows from a table</refpurpose>
+</refnamediv>
+<refsect1>
+<title>Description</title>
+<para>SELECT retrieves rows from tables.</para>
+</refsect1>
+</refentry>
+```
+
+This converts to:
+
+```markdown
+# SELECT
+
+## SELECT
+
+retrieve rows from a table
+
+## Description
+
+SELECT retrieves rows from tables.
+```
+
+### Limitations
+
+- Not all DocBook elements are fully supported
+- Complex nested structures may not convert perfectly
+- Only basic conversion is performed for most elements
+- Tables and complex formatting may require manual adjustment
+
 ## Unsupported Formats
 
 The following formats are **not** supported:
@@ -229,6 +335,9 @@ Supported document formats:
   .htm
   .md
   .rst
+  .sgml
+  .sgm
+  .xml
 ```
 
 ## Format Detection
@@ -238,6 +347,8 @@ Format detection is based solely on file extension (case-insensitive):
 - `document.HTML` → Detected as HTML
 - `README.MD` → Detected as Markdown
 - `guide.RST` → Detected as reStructuredText
+- `reference.SGML` → Detected as SGML/DocBook
+- `chapter.XML` → Detected as SGML/DocBook
 
 Files without extensions or with unknown extensions are treated as
 unsupported.
@@ -261,6 +372,14 @@ unsupported.
 - Use standard RST heading underlines
 - Avoid complex directives that may not convert well
 - Test conversion with sample documents
+
+### SGML/DocBook Documents
+
+- Ensure documents have a `<title>` tag for proper title extraction
+- For PostgreSQL-style reference pages, use `<refentrytitle>` for the
+  main title
+- Use standard DocBook section elements for best heading conversion
+- Test conversion with sample documents before bulk processing
 
 ## Future Format Support
 

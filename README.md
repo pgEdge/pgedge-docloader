@@ -16,15 +16,19 @@ pgEdge Document Loader is a command-line tool for loading documents from various
 ## Overview
 
 The pgEdge Document Loader automatically converts documents (HTML, Markdown,
-and reStructuredText) to Markdown format and loads them into a PostgreSQL
-database with extracted metadata.
+reStructuredText, and SGML/DocBook) to Markdown format and loads them into a
+PostgreSQL database with extracted metadata.
 
 ## Features
 
-- **Multiple Format Support**: HTML, Markdown, and reStructuredText
+- **Multiple Format Support**: HTML, Markdown, reStructuredText, and
+  SGML/DocBook
+
     - **HTML** (`.html`, `.htm`) - Extracts title from `<title>` tag
     - **Markdown** (`.md`) - Extracts title from first `#` heading
     - **reStructuredText** (`.rst`) - Extracts title from underlined headings
+    - **SGML/DocBook** (`.sgml`, `.sgm`, `.xml`) - Extracts title from
+      `<title>` or `<refentrytitle>` tags
 - **Automatic Conversion**: All formats converted to Markdown
 - **Metadata Extraction**: Titles, filenames, timestamps
 - **Flexible Input**: Single file, directory, or glob patterns (including `**` recursive matching)

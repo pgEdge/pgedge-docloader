@@ -19,6 +19,7 @@ const (
 	TypeHTML
 	TypeMarkdown
 	TypeReStructuredText
+	TypeSGML
 )
 
 // String returns the string representation of the DocumentType
@@ -30,6 +31,8 @@ func (dt DocumentType) String() string {
 		return "Markdown"
 	case TypeReStructuredText:
 		return "reStructuredText"
+	case TypeSGML:
+		return "SGML/DocBook"
 	default:
 		return "Unknown"
 	}
