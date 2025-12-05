@@ -55,12 +55,12 @@ nav:
       - Best Practices: best_practices.md
   - Installing pgEdge Document Loader:
       - Configuring the Postgres Database: database-setup.md
-      - Installation: installation.md
+      - Installing Document Loader: installation.md
       - Document Loader Configuration: configuration.md
-      - Adding Custom Metadata Columns: metadata.md
       - pgEdge Document Loader Quickstart: quickstart.md
   - Using pgEdge Document Loader:
       - Using Document Loader: usage.md
+      - Using Custom Metadata Columns: metadata.md
       - Updating a Document: updating.md
       - Managing Authentication: authentication.md
   - Supported Formats:
@@ -69,7 +69,7 @@ nav:
       - RST: rst.md
       # - XML: xml.md 
       # - SGML: sgml.md
-      - Dealing with Unsupported Formats: unsupported-formats.md
+      - Unsupported Formats: unsupported-formats.md
   - Troubleshooting: troubleshooting.md
   - Licence: LICENCE.md
 
