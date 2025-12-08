@@ -70,6 +70,5 @@ nav:
       - RST: rst.md
       - SGML: sgml.md
   - Troubleshooting: troubleshooting.md
-  - Reference:
-      - Changelog: changelog.md
+  - pgEdge Document Loader Release Notes: changelog.md
   - Licence: LICENCE.md
