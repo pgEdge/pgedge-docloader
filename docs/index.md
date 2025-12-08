@@ -27,5 +27,4 @@ The Document Loader supports:
 
 **License**
 
-This project is licensed under the PostgreSQL License. See
-[LICENCE.md](https://github.com/pgEdge/pgedge-docloader/blob/main/LICENCE.md) for details.
+This project is licensed under the [PostgreSQL License](LICENCE.md).
