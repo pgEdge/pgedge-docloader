@@ -47,19 +47,32 @@ extra:
   generator: false
 
 copyright: Copyright &copy; 2025 pgEdge, Inc
-repo_url: https://github.com/pgEdge/pgedge-mcp
+repo_url: https://github.com/pgEdge/pgedge-docloader
 
 nav:
-  - Getting Started:
+  - Introduction:
       - Introduction: index.md
-      - Installation: installation.md
-      - Database Setup: database-setup.md
-
-  - User Guide:
-      - Configuration: configuration.md
-      - Usage: usage.md
-      - Supported Formats: supported-formats.md
-      - Troubleshooting: troubleshooting.md
+      - Best Practices: best_practices.md
+  - Installing pgEdge Document Loader:
+      - Configuring the Postgres Database: database-setup.md
+      - Installing Document Loader: installation.md
+      - Document Loader Configuration: configuration.md
+      - pgEdge Document Loader Quickstart: quickstart.md
+  - Using pgEdge Document Loader:
+      - Using Document Loader: usage.md
+      - Using Custom Metadata Columns: metadata.md
+      - Updating a Document: updating.md
+      - Managing Authentication: authentication.md
+  - Supported Formats:
+      - Supported vs. Unsupported Formats: unsupported-formats.md
+      - HTML or HTM: html.md
+      - Markdown: markdown.md
+      - RST: rst.md
+      - SGML: sgml.md
+  - Troubleshooting: troubleshooting.md
+  - Reference:
+      - Changelog: changelog.md
+  - Licence: LICENCE.md
 
   - Reference:
       - Changelog: changelog.md
