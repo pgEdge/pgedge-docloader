@@ -61,9 +61,8 @@ pgedge-docloader \
 To manage deployment preferences in a [configuration file](configuration.md)), save your deployment details in a file, and then include the `--config` keyword when invoking `pgedge-docloader`:
 
 ```bash
-# Create config.yml
-cat > config.yml <<EOF
-source: "./docs"
+# Create a config.yml file
+source: ./docs
 db-host: localhost
 db-name: mydb
 db-user: myuser
@@ -71,7 +70,6 @@ db-table: documents
 col-doc-content: content
 col-file-name: filename
 update: true
-EOF
 
 # Run with a configuration file
 export PGPASSWORD=mypassword
