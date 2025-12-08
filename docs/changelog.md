@@ -104,6 +104,6 @@ and this project adheres to
 
 ## Next Steps
 
-- [Supported Formats](supported-formats.md) - Full format documentation
+- [Supported Formats](formats.md) - Full format documentation
 - [Configuration](configuration.md) - Configuration options
 - [Usage](usage.md) - Usage examples

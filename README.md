@@ -15,7 +15,7 @@
       - [Updating a Document](docs/updating.md)
       - [Managing Authentication](docs/authentication.md)
   - Supported Formats
-      - [Supported vs. Unsupported Formats](docs/unsupported-formats.md)
+      - [Supported vs. Unsupported Formats](docs/formats.md)
       - [HTML or HTM](docs/html.md)
       - [Markdown](docs/markdown.md)
       - [RST](docs/rst.md)

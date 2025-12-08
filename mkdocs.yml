@@ -64,7 +64,7 @@ nav:
       - Updating a Document: updating.md
       - Managing Authentication: authentication.md
   - Supported Formats:
-      - Supported vs. Unsupported Formats: unsupported-formats.md
+      - Supported vs. Unsupported Formats: formats.md
       - HTML or HTM: html.md
       - Markdown: markdown.md
       - RST: rst.md
