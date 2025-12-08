@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha5] - 2025-12-08
+
+### Changed
+
+- **Documentation restructuring**: Reorganized documentation into separate
+  files for better navigation
+
+    - Split supported-formats.md into individual format documentation files
+      (html.md, markdown.md, rst.md, sgml.md)
+    - Added new documentation pages: authentication.md, best_practices.md,
+      metadata.md, quickstart.md, updating.md
+    - Renamed unsupported-formats.md to formats.md
+    - Updated mkdocs navigation structure
+
+### Fixed
+
+- Fixed repository URL in mkdocs.yml (was pointing to wrong repository)
+- Fixed duplicate Reference section in mkdocs navigation
+- Added missing trailing newlines to documentation files
+
 ## [1.0.0-alpha4] - 2025-12-08
 
 ### Changed
