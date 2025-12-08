@@ -26,6 +26,9 @@ func TestDetectDocumentType(t *testing.T) {
 		{"HTM file", "test.htm", types.TypeHTML},
 		{"Markdown file", "test.md", types.TypeMarkdown},
 		{"RST file", "test.rst", types.TypeReStructuredText},
+		{"SGML file", "test.sgml", types.TypeSGML},
+		{"SGM file", "test.sgm", types.TypeSGML},
+		{"XML file", "test.xml", types.TypeSGML},
 		{"Unknown file", "test.txt", types.TypeUnknown},
 		{"No extension", "test", types.TypeUnknown},
 	}
@@ -261,6 +264,9 @@ func TestIsSupported(t *testing.T) {
 		{"HTML supported", "test.html", true},
 		{"Markdown supported", "test.md", true},
 		{"RST supported", "test.rst", true},
+		{"SGML supported", "test.sgml", true},
+		{"SGM supported", "test.sgm", true},
+		{"XML supported", "test.xml", true},
 		{"TXT not supported", "test.txt", false},
 		{"Unknown not supported", "test", false},
 	}
@@ -278,7 +284,7 @@ func TestIsSupported(t *testing.T) {
 func TestGetSupportedExtensions(t *testing.T) {
 	exts := GetSupportedExtensions()
 
-	expected := []string{".html", ".htm", ".md", ".rst"}
+	expected := []string{".html", ".htm", ".md", ".rst", ".sgml", ".sgm", ".xml"}
 
 	if len(exts) != len(expected) {
 		t.Errorf("expected %d extensions, got %d", len(expected), len(exts))
@@ -489,6 +495,324 @@ Azure Database Cloud Deployment
 			result := convertRSTHeadings(tt.input)
 			if strings.Contains(result, tt.shouldNotContain) {
 				t.Errorf("output should not contain '%s', but got:\n%s", tt.shouldNotContain, result)
+			}
+		})
+	}
+}
+
+func TestConvertSGML(t *testing.T) {
+	tests := []struct {
+		name             string
+		sgml             []byte
+		expectedTitle    string
+		shouldContain    []string
+		shouldNotContain []string
+	}{
+		{
+			"Basic DocBook document",
+			[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN">
+<book>
+<title>Test Document</title>
+<chapter>
+<title>Chapter 1</title>
+<para>This is a paragraph.</para>
+<sect1>
+<title>Section 1.1</title>
+<para>Section content.</para>
+</sect1>
+</chapter>
+</book>`),
+			"Test Document",
+			[]string{
+				"# Test Document",
+				"# Chapter 1",
+				"## Section 1.1",
+				"This is a paragraph.",
+				"Section content.",
+			},
+			[]string{"<?xml", "<!DOCTYPE", "<book>", "<para>"},
+		},
+		{
+			"DocBook with code elements",
+			[]byte(`<sect1>
+<title>Commands</title>
+<para>Use the <command>ls</command> command to list files.</para>
+<para>The <filename>/etc/passwd</filename> file contains user info.</para>
+<para>Call <function>main()</function> to start.</para>
+</sect1>`),
+			"Commands",
+			[]string{
+				"## Commands",
+				"`ls`",
+				"`/etc/passwd`",
+				"`main()`",
+			},
+			[]string{"<command>", "<filename>", "<function>"},
+		},
+		{
+			"DocBook with programlisting",
+			[]byte(`<sect1>
+<title>Example</title>
+<programlisting>
+SELECT * FROM users;
+</programlisting>
+</sect1>`),
+			"Example",
+			[]string{
+				"## Example",
+				"```",
+				"SELECT * FROM users;",
+			},
+			[]string{"<programlisting>"},
+		},
+		{
+			"DocBook with itemized list",
+			[]byte(`<sect1>
+<title>Features</title>
+<itemizedlist>
+<listitem><para>First item</para></listitem>
+<listitem><para>Second item</para></listitem>
+</itemizedlist>
+</sect1>`),
+			"Features",
+			[]string{
+				"## Features",
+				"- ",
+				"First item",
+				"Second item",
+			},
+			[]string{"<itemizedlist>", "<listitem>"},
+		},
+		{
+			"DocBook with emphasis",
+			[]byte(`<para>This is <emphasis>important</emphasis> text.</para>`),
+			"",
+			[]string{"*important*"},
+			[]string{"<emphasis>"},
+		},
+		{
+			"PostgreSQL refentry format",
+			[]byte(`<refentry>
+<refmeta><refentrytitle>SELECT</refentrytitle></refmeta>
+<refnamediv>
+<refname>SELECT</refname>
+<refpurpose>retrieve rows from a table</refpurpose>
+</refnamediv>
+<refsect1>
+<title>Description</title>
+<para>SELECT retrieves rows from tables.</para>
+</refsect1>
+</refentry>`),
+			"SELECT",
+			[]string{
+				"# SELECT",
+				"## SELECT",
+				"retrieve rows from a table",
+				"## Description",
+				"SELECT retrieves rows from tables.",
+			},
+			[]string{"<refentry>", "<refmeta>", "<refsect1>"},
+		},
+		{
+			"DocBook with links",
+			[]byte(`<para>See <ulink url="https://example.com">the docs</ulink> for more.</para>`),
+			"",
+			[]string{"[the docs](https://example.com)"},
+			[]string{"<ulink"},
+		},
+		{
+			"DocBook with HTML entities",
+			[]byte(`<para>Use &lt;tag&gt; for markup.</para>`),
+			"",
+			[]string{"<tag>"},
+			[]string{"&lt;", "&gt;"},
+		},
+		{
+			"DocBook with comments",
+			[]byte(`<!-- This is a comment -->
+<sect1>
+<title>Section</title>
+<para>Content here.</para>
+</sect1>`),
+			"Section",
+			[]string{"## Section", "Content here."},
+			[]string{"<!--", "comment"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			markdown, title, err := convertSGML(tt.sgml)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if title != tt.expectedTitle {
+				t.Errorf("expected title '%s', got '%s'", tt.expectedTitle, title)
+			}
+
+			for _, expected := range tt.shouldContain {
+				if !strings.Contains(markdown, expected) {
+					t.Errorf("markdown should contain '%s', got:\n%s", expected, markdown)
+				}
+			}
+
+			for _, notExpected := range tt.shouldNotContain {
+				if strings.Contains(markdown, notExpected) {
+					t.Errorf("markdown should not contain '%s', got:\n%s", notExpected, markdown)
+				}
+			}
+		})
+	}
+}
+
+func TestExtractSGMLTitle(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected string
+	}{
+		{
+			"Simple title tag",
+			"<book><title>Test Title</title></book>",
+			"Test Title",
+		},
+		{
+			"Title with entity",
+			"<title>Test &amp; Title</title>",
+			"Test & Title",
+		},
+		{
+			"Refentrytitle for PostgreSQL docs",
+			"<refmeta><refentrytitle>CREATE TABLE</refentrytitle></refmeta>",
+			"CREATE TABLE",
+		},
+		{
+			"No title",
+			"<para>Just content</para>",
+			"",
+		},
+		{
+			"Title with whitespace",
+			"<title>  Padded Title  </title>",
+			"Padded Title",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractSGMLTitle(tt.content)
+			if result != tt.expected {
+				t.Errorf("expected '%s', got '%s'", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestConvertSGMLHeadings(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		contains []string
+	}{
+		{
+			"Chapter heading",
+			"<chapter><title>Chapter One</title><para>Content</para></chapter>",
+			[]string{"# Chapter One"},
+		},
+		{
+			"Section hierarchy",
+			`<sect1><title>Section 1</title>
+<sect2><title>Section 1.1</title></sect2>
+<sect2><title>Section 1.2</title></sect2>
+</sect1>`,
+			[]string{"## Section 1", "### Section 1.1", "### Section 1.2"},
+		},
+		{
+			"PostgreSQL refsect",
+			`<refsect1><title>Description</title></refsect1>
+<refsect2><title>Parameters</title></refsect2>`,
+			[]string{"## Description", "### Parameters"},
+		},
+		{
+			"Appendix and article",
+			"<appendix><title>Appendix A</title></appendix><article><title>Article</title></article>",
+			[]string{"# Appendix A", "# Article"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := convertSGMLHeadings(tt.input)
+			for _, expected := range tt.contains {
+				if !strings.Contains(result, expected) {
+					t.Errorf("expected '%s' in output, got:\n%s", expected, result)
+				}
+			}
+		})
+	}
+}
+
+func TestConvertSGMLTags(t *testing.T) {
+	tests := []struct {
+		name             string
+		input            string
+		shouldContain    []string
+		shouldNotContain []string
+	}{
+		{
+			"Paragraph conversion",
+			"<para>First paragraph.</para><para>Second paragraph.</para>",
+			[]string{"First paragraph.", "Second paragraph."},
+			[]string{"<para>", "</para>"},
+		},
+		{
+			"Code elements",
+			"<literal>code</literal> <command>cmd</command> <varname>var</varname>",
+			[]string{"`code`", "`cmd`", "`var`"},
+			[]string{"<literal>", "<command>", "<varname>"},
+		},
+		{
+			"Screen element",
+			"<screen>$ echo hello\nhello</screen>",
+			[]string{"```", "$ echo hello"},
+			[]string{"<screen>"},
+		},
+		{
+			"Xref conversion",
+			`<xref linkend="some-section"/>`,
+			[]string{"`some-section`"},
+			[]string{"<xref"},
+		},
+		{
+			"Comment removal",
+			"<!-- comment --><para>visible</para>",
+			[]string{"visible"},
+			[]string{"<!--", "comment", "-->"},
+		},
+		{
+			"List container removal",
+			"<variablelist><listitem>item</listitem></variablelist>",
+			[]string{"- ", "item"},
+			[]string{"<variablelist>", "</variablelist>"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := convertSGMLTags(tt.input)
+
+			for _, expected := range tt.shouldContain {
+				if !strings.Contains(result, expected) {
+					t.Errorf("should contain '%s', got:\n%s", expected, result)
+				}
+			}
+
+			for _, notExpected := range tt.shouldNotContain {
+				if strings.Contains(result, notExpected) {
+					t.Errorf("should not contain '%s', got:\n%s", notExpected, result)
+				}
 			}
 		})
 	}

@@ -40,6 +40,8 @@ func DetectDocumentType(filename string) types.DocumentType {
 		return types.TypeMarkdown
 	case ".rst":
 		return types.TypeReStructuredText
+	case ".sgml", ".sgm", ".xml":
+		return types.TypeSGML
 	default:
 		return types.TypeUnknown
 	}
@@ -54,6 +56,8 @@ func Convert(content []byte, docType types.DocumentType) (markdown string, title
 		return processMarkdown(content)
 	case types.TypeReStructuredText:
 		return convertRST(content)
+	case types.TypeSGML:
+		return convertSGML(content)
 	default:
 		return "", "", ErrUnsupportedFormat
 	}
@@ -412,6 +416,227 @@ func convertRSTImages(content string) string {
 	return strings.Join(result, "\n")
 }
 
+// convertSGML converts SGML/DocBook to Markdown and extracts the title
+func convertSGML(content []byte) (string, string, error) {
+	text := string(content)
+
+	// Extract title from SGML
+	title := extractSGMLTitle(text)
+
+	// Convert SGML tags to Markdown
+	markdown := convertSGMLTags(text)
+
+	// Prepend title as H1 heading if we have one and it's not already in the content
+	if title != "" {
+		markdown = strings.TrimSpace(markdown)
+		// Check if markdown already starts with the title as a heading
+		expectedStart := "# " + title
+		if !strings.HasPrefix(markdown, expectedStart) {
+			markdown = "# " + title + "\n\n" + markdown
+		}
+	}
+
+	return markdown, title, nil
+}
+
+// extractSGMLTitle extracts the title from SGML/DocBook documents
+func extractSGMLTitle(content string) string {
+	// Try refentrytitle first (PostgreSQL-style reference pages)
+	// This is more specific than generic <title> tags
+	refTitleRe := regexp.MustCompile(`(?i)<refentrytitle[^>]*>([^<]+)</refentrytitle>`)
+	matches := refTitleRe.FindStringSubmatch(content)
+	if len(matches) > 1 {
+		return html.UnescapeString(strings.TrimSpace(matches[1]))
+	}
+
+	// Try to extract from <title> tags
+	titleRe := regexp.MustCompile(`(?i)<title[^>]*>([^<]+)</title>`)
+	matches = titleRe.FindStringSubmatch(content)
+	if len(matches) > 1 {
+		return html.UnescapeString(strings.TrimSpace(matches[1]))
+	}
+
+	return ""
+}
+
+// convertSGMLTags converts SGML/DocBook tags to Markdown
+func convertSGMLTags(content string) string {
+	result := content
+
+	// Remove SGML comments using simple string operations to avoid regex issues
+	for {
+		start := strings.Index(result, "<!--")
+		if start == -1 {
+			break
+		}
+		end := strings.Index(result[start:], "-->")
+		if end == -1 {
+			break
+		}
+		result = result[:start] + result[start+end+3:]
+	}
+
+	// Remove DOCTYPE declarations
+	doctypeRe := regexp.MustCompile(`(?i)<!DOCTYPE[^>]*>`)
+	result = doctypeRe.ReplaceAllString(result, "")
+
+	// Remove XML declarations
+	xmlDeclRe := regexp.MustCompile(`<\?xml[^?]*\?>`)
+	result = xmlDeclRe.ReplaceAllString(result, "")
+
+	// Convert headings
+	result = convertSGMLHeadings(result)
+
+	// Convert itemized lists BEFORE para conversion
+	// Handle listitem with nested para specially - consume the opening para tag
+	listItemParaRe := regexp.MustCompile(`(?i)<listitem[^>]*>\s*<para[^>]*>`)
+	result = listItemParaRe.ReplaceAllString(result, "\n- ")
+	// Handle remaining listitem tags without para
+	itemRe := regexp.MustCompile(`(?i)<listitem[^>]*>`)
+	result = itemRe.ReplaceAllString(result, "\n- ")
+	// Handle closing para inside listitem - just remove it
+	listItemEndParaRe := regexp.MustCompile(`(?i)</para>\s*</listitem>`)
+	result = listItemEndParaRe.ReplaceAllString(result, "")
+	itemEndRe := regexp.MustCompile(`(?i)</listitem>`)
+	result = itemEndRe.ReplaceAllString(result, "")
+
+	// Remove list container tags
+	listRe := regexp.MustCompile(`(?i)</?(?:itemizedlist|orderedlist|variablelist|simplelist)[^>]*>`)
+	result = listRe.ReplaceAllString(result, "\n")
+
+	// Convert paragraph tags to proper spacing
+	paraRe := regexp.MustCompile(`(?i)<para[^>]*>`)
+	result = paraRe.ReplaceAllString(result, "\n\n")
+	paraEndRe := regexp.MustCompile(`(?i)</para>`)
+	result = paraEndRe.ReplaceAllString(result, "\n\n")
+
+	// Convert emphasis to italic
+	emphRe := regexp.MustCompile(`(?i)<emphasis[^>]*>([^<]*)</emphasis>`)
+	result = emphRe.ReplaceAllString(result, "*$1*")
+
+	// Convert code-like elements to inline code
+	codeElements := []string{"literal", "command", "filename", "function", "type",
+		"varname", "option", "parameter", "constant", "replaceable"}
+	for _, elem := range codeElements {
+		re := regexp.MustCompile(`(?i)<` + elem + `[^>]*>([^<]*)</` + elem + `>`)
+		result = re.ReplaceAllString(result, "`$1`")
+	}
+
+	// Convert programlisting to code blocks
+	progRe := regexp.MustCompile(`(?is)<programlisting[^>]*>(.*?)</programlisting>`)
+	result = progRe.ReplaceAllStringFunc(result, func(match string) string {
+		inner := progRe.FindStringSubmatch(match)
+		if len(inner) > 1 {
+			code := strings.TrimSpace(inner[1])
+			return "\n```\n" + code + "\n```\n"
+		}
+		return match
+	})
+
+	// Convert screen to code blocks (similar to programlisting)
+	screenRe := regexp.MustCompile(`(?is)<screen[^>]*>(.*?)</screen>`)
+	result = screenRe.ReplaceAllStringFunc(result, func(match string) string {
+		inner := screenRe.FindStringSubmatch(match)
+		if len(inner) > 1 {
+			code := strings.TrimSpace(inner[1])
+			return "\n```\n" + code + "\n```\n"
+		}
+		return match
+	})
+
+	// Convert links
+	linkRe := regexp.MustCompile(`(?i)<ulink[^>]*url="([^"]*)"[^>]*>([^<]*)</ulink>`)
+	result = linkRe.ReplaceAllString(result, "[$2]($1)")
+
+	// Convert xref links (just use the linkend as text)
+	xrefRe := regexp.MustCompile(`(?i)<xref[^>]*linkend="([^"]*)"[^>]*/>`)
+	result = xrefRe.ReplaceAllString(result, "`$1`")
+
+	// Remove remaining tags
+	tagRe := regexp.MustCompile(`<[^>]+>`)
+	result = tagRe.ReplaceAllString(result, "")
+
+	// Decode HTML entities
+	result = html.UnescapeString(result)
+
+	// Clean up excessive whitespace
+	multiNewlineRe := regexp.MustCompile(`\n{3,}`)
+	result = multiNewlineRe.ReplaceAllString(result, "\n\n")
+
+	// Trim leading/trailing whitespace from each line
+	lines := strings.Split(result, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimRight(line, " \t")
+	}
+	result = strings.Join(lines, "\n")
+
+	return strings.TrimSpace(result)
+}
+
+// convertSGMLHeadings converts SGML/DocBook section tags to Markdown headings
+func convertSGMLHeadings(content string) string {
+	result := content
+
+	// Map of SGML heading tags to Markdown levels
+	headingMappings := []struct {
+		tag   string
+		level int
+	}{
+		{"chapter", 1},
+		{"appendix", 1},
+		{"article", 1},
+		{"book", 1},
+		{"sect1", 2},
+		{"refsect1", 2},
+		{"refsynopsisdiv", 2},
+		{"sect2", 3},
+		{"refsect2", 3},
+		{"sect3", 4},
+		{"refsect3", 4},
+		{"sect4", 5},
+		{"sect5", 6},
+		{"section", 2}, // Generic section
+	}
+
+	for _, mapping := range headingMappings {
+		// Match opening tag with nested title
+		pattern := `(?is)<` + mapping.tag + `[^>]*>\s*<title[^>]*>([^<]*)</title>`
+		re := regexp.MustCompile(pattern)
+		result = re.ReplaceAllStringFunc(result, func(match string) string {
+			inner := re.FindStringSubmatch(match)
+			if len(inner) > 1 {
+				title := html.UnescapeString(strings.TrimSpace(inner[1]))
+				return "\n" + strings.Repeat("#", mapping.level) + " " + title + "\n"
+			}
+			return match
+		})
+
+		// Remove closing tags
+		closeRe := regexp.MustCompile(`(?i)</` + mapping.tag + `>`)
+		result = closeRe.ReplaceAllString(result, "\n")
+	}
+
+	// Handle refentry specially (PostgreSQL man pages)
+	refentryRe := regexp.MustCompile(`(?is)<refentry[^>]*>`)
+	result = refentryRe.ReplaceAllString(result, "")
+	refentryEndRe := regexp.MustCompile(`(?i)</refentry>`)
+	result = refentryEndRe.ReplaceAllString(result, "")
+
+	// Handle refnamediv (name and purpose)
+	refnamedivRe := regexp.MustCompile(`(?is)<refnamediv[^>]*>.*?<refname[^>]*>([^<]*)</refname>.*?<refpurpose[^>]*>([^<]*)</refpurpose>.*?</refnamediv>`)
+	result = refnamedivRe.ReplaceAllStringFunc(result, func(match string) string {
+		inner := refnamedivRe.FindStringSubmatch(match)
+		if len(inner) > 2 {
+			name := html.UnescapeString(strings.TrimSpace(inner[1]))
+			purpose := html.UnescapeString(strings.TrimSpace(inner[2]))
+			return "\n## " + name + "\n\n" + purpose + "\n"
+		}
+		return match
+	})
+
+	return result
+}
+
 // IsSupported returns true if the file type is supported
 func IsSupported(filename string) bool {
 	docType := DetectDocumentType(filename)
@@ -420,7 +645,7 @@ func IsSupported(filename string) bool {
 
 // GetSupportedExtensions returns a list of supported file extensions
 func GetSupportedExtensions() []string {
-	return []string{".html", ".htm", ".md", ".rst"}
+	return []string{".html", ".htm", ".md", ".rst", ".sgml", ".sgm", ".xml"}
 }
 
 // ReadAll reads all content from a reader

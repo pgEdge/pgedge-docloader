@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	version = "1.0.0-alpha1"
+	version = "1.0.0-alpha4"
 	commit  = "none"
 	date    = "unknown"
 )
@@ -40,7 +40,7 @@ var rootCmd = &cobra.Command{
 	Use:   "pgedge-docloader",
 	Short: "pgEdge Document Loader - Load documents into PostgreSQL",
 	Long: `pgEdge Document Loader is a tool to load documents from various formats
-(HTML, Markdown, PDF, reStructuredText) into a PostgreSQL database table.
+(HTML, Markdown, reStructuredText, SGML/DocBook) into a PostgreSQL database table.
 
 The tool converts documents to Markdown format and extracts metadata before
 storing them in the specified database table.`,

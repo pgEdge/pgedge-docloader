@@ -84,7 +84,7 @@ CREATE TABLE documents (
 
 **Invoking pgedge-docloader**
 
-When invoking `pgedge-docloader`, you can [specify configuration preferences on the command line](/docs/configuration.md#specifying-options-on-the-command-line), or with a [configuration file](/docs/configuration.md#specifying-options-in-a-configuration-file).  
+When invoking `pgedge-docloader`, you can [specify configuration preferences on the command line](/docs/configuration.md#specifying-options-on-the-command-line), or with a [configuration file](/docs/configuration.md#specifying-options-in-a-configuration-file).
 
 The following command [invokes Document Loader on the command line](/docs/usage.md):
 
@@ -152,4 +152,3 @@ Your contributions are welcome! Please feel free to submit issues and pull reque
 
 This project is licensed under the PostgreSQL License. See
 [LICENCE.md](LICENCE.md) for details.
-
