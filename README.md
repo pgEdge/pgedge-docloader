@@ -23,15 +23,17 @@
   - [Troubleshooting](docs/troubleshooting.md)
   - [Licence](docs/LICENCE.md)
 
-pgEdge Document Loader is a command-line tool for loading documents from various formats into PostgreSQL databases.  Full documentation is available at:
-
-[https://pgedge.github.io/pgedge-docloader](https://pgedge.github.io/pgedge-docloader)
+pgEdge Document Loader is a command-line tool for loading documents from various formats into PostgreSQL databases.  Full documentation is available [here](https://docs.pgedge.com/pgedge-docloader/).
 
 The pgEdge Document Loader automatically converts documents (HTML, Markdown, reStructuredText, and SGML/DocBook) to Markdown format and loads them into a PostgreSQL database with extracted metadata.
 
 **Features**
 
-- **Multiple Format Support**: HTML, Markdown, reStructuredText, and SGML/DocBook
+The pgEdge Document Loader automatically converts documents (HTML, Markdown, reStructuredText, and DocBook SGML/XML) to Markdown format and loads them into a PostgreSQL database with extracted metadata.
+
+**Features**
+
+- **Multiple Format Support**: HTML, Markdown, reStructuredText, and DocBook SGML/XML
 - **Automatic Conversion**: All formats converted to Markdown
 - **Metadata Extraction**: Titles, filenames, timestamps
 - **Flexible Input**: Single file, directory, or glob patterns (including `**` recursive matching)
@@ -46,8 +48,8 @@ The pgEdge Document Loader automatically converts documents (HTML, Markdown, reS
 
 Before installing and using pgEdge Document Loader, download and install:
 
-- Go 1.21 or later
-- PostgreSQL 12 or later
+- Go 1.23 or later
+- PostgreSQL 14 or later
 
 Getting started with pgEdge Document Loader involves three steps:
 
@@ -145,10 +147,9 @@ Your contributions are welcome! Please feel free to submit issues and pull reque
 
 ## Support
 
-- Documentation: [https://pgedge.github.io/pgedge-docloader](https://pgedge.github.io/pgedge-docloader)
+- Documentation: [pgEdge Docloader](https://docs.pgedge.com/pgedge-docloader/)
 - Issues: [GitHub Issues](https://github.com/pgedge/pgedge-docloader/issues)
 
 ## License
 
-This project is licensed under the PostgreSQL License. See
-[LICENCE.md](LICENCE.md) for details.
+This project is licensed under the [PostgreSQL License](LICENCE.md).

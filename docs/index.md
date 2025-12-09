@@ -7,9 +7,10 @@ before storing them in the database.
 
 pgEdge Document Loader supports the following document formats:
 
-- **HTML** (`.html`, `.htm`) - Extracts the document title from `<title>` tag
-- **Markdown** (`.md`) - Extracts the title from first `#` heading
-- **reStructuredText** (`.rst`) - Extracts the title from underlined headings
+- **HTML** (`.html`, `.htm`) - Extracts the document title from `<title>` tags.
+- **Markdown** (`.md`) - Extracts the title from first `#` headings.
+- **reStructuredText** (`.rst`) - Extracts the title from underlined headings.
+- **DocBook SGML/XML** (`.sqml`, `.xml` ) - Extracts the title from `<title>` or `<refentrytitle>` tags (PostgreSQL-style reference pages use `<refentrytitle>`).
 
 **Key Features**
 
