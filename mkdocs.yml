@@ -50,7 +50,7 @@ copyright: Copyright &copy; 2025 pgEdge, Inc
 repo_url: https://github.com/pgEdge/pgedge-docloader
 
 nav:
-  - Introduction:
+  - pgEdge Document Loader:
       - Introduction: index.md
       - Best Practices: best_practices.md
   - Installing pgEdge Document Loader:
