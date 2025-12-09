@@ -1,25 +1,4 @@
-# Reviewing Online Help and Troubleshooting
-
-To review online help on all command-line options, use the command:
-
-```bash
-pgedge-docloader --help
-```
-
-To see pgEdge Document Loader version information:
-
-```bash
-pgedge-docloader version
-```
-
-To review a list of supported document formats:
-
-```bash
-pgedge-docloader formats
-```
-
-
-## Troubleshooting
+# Troubleshooting
 
 Common issues and solutions when using the pgEdge Document Loader.
 
@@ -401,7 +380,7 @@ If you encounter issues not covered here:
 
 5. Report issues at: https://github.com/pgedge/pgedge-docloader/issues
 
-## Common Debugging Steps
+### Common Debugging Steps
 
 1. **Test database connection:**
 
@@ -440,3 +419,24 @@ If you encounter issues not covered here:
    INSERT INTO documents (content, filename)
    VALUES ('test', 'test.md');
    ```
+
+### Reviewing Online Help
+
+To review online help on all command-line options, use the command:
+
+```bash
+pgedge-docloader --help
+```
+
+To retrieve pgEdge Document Loader version information:
+
+```bash
+pgedge-docloader version
+```
+
+To review a list of supported document formats:
+
+```bash
+pgedge-docloader formats
+```
+
