@@ -1,6 +1,7 @@
 # pgEdge Document Loader
 
-[![CI](https://github.com/pgEdge/pgedge-docloader/actions/workflows/ci.yml/badge.svg)](https://github.com/pgEdge/pgedge-docloader/actions/workflows/ci.yml)
+[![CI](https://github.com/pgEdge/pgedge-docloader/actions/workflows/ci.yml/badge.svg)](https://github.com/pgEdge/pgedge-docloader/actions/workflows/ci.yml) 
+[![Release](https://github.com/pgEdge/pgedge-docloader/actions/workflows/release.yml/badge.svg)](https://github.com/pgEdge/pgedge-docloader/actions/workflows/release.yml)
 
   - [Introduction](docs/index.md)
       - [Best Practices](docs/best_practices.md)
