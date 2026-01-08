@@ -12,6 +12,7 @@
       - [pgEdge Document Loader Quickstart](docs/quickstart.md)
   - Using pgEdge Document Loader
       - [Using Document Loader](docs/usage.md)
+      - [Using Git Repository Sources](docs/git-sources.md)
       - [Using Custom Metadata Columns](docs/metadata.md)
       - [Updating a Document](docs/updating.md)
       - [Managing Authentication](docs/authentication.md)
@@ -35,9 +36,10 @@ The pgEdge Document Loader automatically converts documents (HTML, Markdown, reS
 **Features**
 
 - **Multiple Format Support**: HTML, Markdown, reStructuredText, and DocBook SGML/XML
+- **Git Repository Support**: Clone and process docs directly from Git repositories
 - **Automatic Conversion**: All formats converted to Markdown
 - **Metadata Extraction**: Titles, filenames, timestamps
-- **Flexible Input**: Single file, directory, or glob patterns (including `**` recursive matching)
+- **Flexible Input**: Single file, directory, glob patterns, or Git repository URL
 - **Database Flexibility**: Configurable column mappings
 - **Custom Metadata Columns**: Add fixed values to custom columns for every row
 - **Update Mode**: Update existing rows or insert new ones

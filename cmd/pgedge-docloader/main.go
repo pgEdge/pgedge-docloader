@@ -19,6 +19,7 @@ import (
 	"github.com/pgedge/pgedge-docloader/internal/config"
 	"github.com/pgedge/pgedge-docloader/internal/converter"
 	"github.com/pgedge/pgedge-docloader/internal/database"
+	"github.com/pgedge/pgedge-docloader/internal/gitsource"
 	"github.com/pgedge/pgedge-docloader/internal/processor"
 	"github.com/pgedge/pgedge-docloader/internal/types"
 )
@@ -51,9 +52,18 @@ func init() {
 	// Configuration file
 	rootCmd.Flags().StringP("config", "c", "", "Path to configuration file")
 
-	// Source configuration
+	// Source configuration - Local
 	rootCmd.Flags().StringP("source", "s", "", "Source file, directory, or glob pattern")
 	rootCmd.Flags().Bool("strip-path", false, "Strip path from filename, keeping only the base name")
+
+	// Source configuration - Git (mutually exclusive with --source)
+	rootCmd.Flags().String("git-url", "", "Git repository URL to clone and process")
+	rootCmd.Flags().String("git-branch", "", "Git branch to checkout (default: repository default)")
+	rootCmd.Flags().String("git-tag", "", "Git tag to checkout (mutually exclusive with --git-branch)")
+	rootCmd.Flags().String("git-doc-path", "", "Path within repository to process (supports glob patterns)")
+	rootCmd.Flags().String("git-clone-dir", "", "Directory to store cloned repositories (default: temp directory)")
+	rootCmd.Flags().Bool("git-keep-clone", false, "Keep cloned repository after processing")
+	rootCmd.Flags().Bool("git-skip-fetch", false, "Skip git fetch if repository already exists")
 
 	// Database connection
 	rootCmd.Flags().String("db-host", "localhost", "Database host")
@@ -113,9 +123,30 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
+	// Determine source path
+	var sourcePath string
+	var gitSource *gitsource.GitSource
+
+	if cfg.GitURL != "" {
+		// Git source
+		gitSource, err = gitsource.New(cfg)
+		if err != nil {
+			return fmt.Errorf("failed to setup git source: %w", err)
+		}
+		defer func() {
+			if cleanupErr := gitSource.Cleanup(); cleanupErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: cleanup failed: %v\n", cleanupErr)
+			}
+		}()
+		sourcePath = gitSource.GetSourcePath()
+	} else {
+		// Local source
+		sourcePath = cfg.Source
+	}
+
 	// Process files
-	fmt.Printf("Processing files from: %s\n", cfg.Source)
-	documents, stats, err := processor.ProcessFiles(cfg.Source, cfg.StripPath)
+	fmt.Printf("Processing files from: %s\n", sourcePath)
+	documents, stats, err := processor.ProcessFiles(sourcePath, cfg.StripPath)
 	if err != nil {
 		return fmt.Errorf("failed to process files: %w", err)
 	}

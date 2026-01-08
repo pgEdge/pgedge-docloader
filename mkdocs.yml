@@ -60,6 +60,7 @@ nav:
       - pgEdge Document Loader Quickstart: quickstart.md
   - Using pgEdge Document Loader:
       - Using Document Loader: usage.md
+      - Using Git Repository Sources: git-sources.md
       - Using Custom Metadata Columns: metadata.md
       - Updating a Document: updating.md
       - Managing Authentication: authentication.md

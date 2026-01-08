@@ -49,8 +49,18 @@ func Load(cmd *cobra.Command) (*types.Config, error) {
 	}
 
 	// Load configuration values (CLI flags override config file)
+	// Local source configuration
 	cfg.Source = viper.GetString("source")
 	cfg.StripPath = viper.GetBool("strip-path")
+
+	// Git source configuration
+	cfg.GitURL = viper.GetString("git-url")
+	cfg.GitBranch = viper.GetString("git-branch")
+	cfg.GitTag = viper.GetString("git-tag")
+	cfg.GitDocPath = viper.GetString("git-doc-path")
+	cfg.GitCloneDir = viper.GetString("git-clone-dir")
+	cfg.GitKeepClone = viper.GetBool("git-keep-clone")
+	cfg.GitSkipFetch = viper.GetBool("git-skip-fetch")
 
 	cfg.DBHost = viper.GetString("db-host")
 	cfg.DBPort = viper.GetInt("db-port")
@@ -104,6 +114,7 @@ func Load(cmd *cobra.Command) (*types.Config, error) {
 	if cfg.ConfigFile != "" {
 		configDir := filepath.Dir(cfg.ConfigFile)
 		cfg.Source = resolvePath(cfg.Source, configDir)
+		cfg.GitCloneDir = resolvePath(cfg.GitCloneDir, configDir)
 		cfg.DBSSLCert = resolvePath(cfg.DBSSLCert, configDir)
 		cfg.DBSSLKey = resolvePath(cfg.DBSSLKey, configDir)
 		cfg.DBSSLRoot = resolvePath(cfg.DBSSLRoot, configDir)
@@ -198,8 +209,19 @@ func readPgPass() (string, error) {
 
 // validate validates the configuration
 func validate(cfg *types.Config) error {
-	if cfg.Source == "" {
-		return fmt.Errorf("source path is required")
+	// Source validation: either local source or git-url, but not both
+	if cfg.Source == "" && cfg.GitURL == "" {
+		return fmt.Errorf("either --source or --git-url is required")
+	}
+	if cfg.Source != "" && cfg.GitURL != "" {
+		return fmt.Errorf("--source and --git-url are mutually exclusive")
+	}
+
+	// Git-specific validation
+	if cfg.GitURL != "" {
+		if cfg.GitBranch != "" && cfg.GitTag != "" {
+			return fmt.Errorf("--git-branch and --git-tag are mutually exclusive")
+		}
 	}
 
 	if cfg.DBHost == "" {
