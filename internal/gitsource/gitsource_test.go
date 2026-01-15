@@ -140,7 +140,11 @@ func TestGitSourceCloneAndCleanup(t *testing.T) {
         t.Fatalf("failed to create GitSource: %v", err)
     }
 
-    sourcePath := gs.GetSourcePath()
+    sourcePaths := gs.GetSourcePaths()
+    if len(sourcePaths) == 0 {
+        t.Fatal("expected at least one source path")
+    }
+    sourcePath := sourcePaths[0]
     if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
         t.Error("source path should exist after clone")
     }
@@ -188,7 +192,7 @@ func TestGitSourceWithDocPath(t *testing.T) {
 
     cfg := &types.Config{
         GitURL:       bareRepo,
-        GitDocPath:   "docs/api",
+        GitDocPath:   []string{"docs/api"},
         GitKeepClone: false,
     }
 
@@ -198,7 +202,11 @@ func TestGitSourceWithDocPath(t *testing.T) {
     }
     defer gs.Cleanup()
 
-    sourcePath := gs.GetSourcePath()
+    sourcePaths := gs.GetSourcePaths()
+    if len(sourcePaths) == 0 {
+        t.Fatal("expected at least one source path")
+    }
+    sourcePath := sourcePaths[0]
     if !filepath.IsAbs(sourcePath) {
         t.Error("source path should be absolute")
     }
@@ -246,7 +254,11 @@ func TestGitSourceKeepClone(t *testing.T) {
         t.Fatalf("failed to create GitSource: %v", err)
     }
 
-    sourcePath := gs.GetSourcePath()
+    sourcePaths := gs.GetSourcePaths()
+    if len(sourcePaths) == 0 {
+        t.Fatal("expected at least one source path")
+    }
+    sourcePath := sourcePaths[0]
 
     // Cleanup should not remove the repo when GitKeepClone is true
     gs.Cleanup()
@@ -299,8 +311,11 @@ func TestGitSourceSkipFetch(t *testing.T) {
     defer gs2.Cleanup()
 
     // Should succeed without network call
-    sourcePath := gs2.GetSourcePath()
-    if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+    sourcePaths := gs2.GetSourcePaths()
+    if len(sourcePaths) == 0 {
+        t.Fatal("expected at least one source path")
+    }
+    if _, err := os.Stat(sourcePaths[0]); os.IsNotExist(err) {
         t.Error("source path should exist")
     }
 }

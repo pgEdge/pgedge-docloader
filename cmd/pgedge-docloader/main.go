@@ -53,14 +53,14 @@ func init() {
 	rootCmd.Flags().StringP("config", "c", "", "Path to configuration file")
 
 	// Source configuration - Local
-	rootCmd.Flags().StringP("source", "s", "", "Source file, directory, or glob pattern")
+	rootCmd.Flags().StringSliceP("source", "s", []string{}, "Source file, directory, or glob pattern (can be repeated)")
 	rootCmd.Flags().Bool("strip-path", false, "Strip path from filename, keeping only the base name")
 
 	// Source configuration - Git (mutually exclusive with --source)
 	rootCmd.Flags().String("git-url", "", "Git repository URL to clone and process")
 	rootCmd.Flags().String("git-branch", "", "Git branch to checkout (default: repository default)")
 	rootCmd.Flags().String("git-tag", "", "Git tag to checkout (mutually exclusive with --git-branch)")
-	rootCmd.Flags().String("git-doc-path", "", "Path within repository to process (supports glob patterns)")
+	rootCmd.Flags().StringSlice("git-doc-path", []string{}, "Path within repository to process (can be repeated)")
 	rootCmd.Flags().String("git-clone-dir", "", "Directory to store cloned repositories (default: temp directory)")
 	rootCmd.Flags().Bool("git-keep-clone", false, "Keep cloned repository after processing")
 	rootCmd.Flags().Bool("git-skip-fetch", false, "Skip git fetch if repository already exists")
@@ -123,8 +123,8 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Determine source path
-	var sourcePath string
+	// Determine source paths
+	var sourcePaths []string
 	var gitSource *gitsource.GitSource
 
 	if cfg.GitURL != "" {
@@ -138,20 +138,29 @@ func run(cmd *cobra.Command, args []string) error {
 				fmt.Fprintf(os.Stderr, "Warning: cleanup failed: %v\n", cleanupErr)
 			}
 		}()
-		sourcePath = gitSource.GetSourcePath()
+		sourcePaths = gitSource.GetSourcePaths()
 	} else {
 		// Local source
-		sourcePath = cfg.Source
+		sourcePaths = cfg.Source
 	}
 
-	// Process files
-	fmt.Printf("Processing files from: %s\n", sourcePath)
-	documents, stats, err := processor.ProcessFiles(sourcePath, cfg.StripPath)
-	if err != nil {
-		return fmt.Errorf("failed to process files: %w", err)
+	// Process files from all source paths
+	var allDocuments []*types.Document
+	stats := &types.Stats{}
+
+	for _, sourcePath := range sourcePaths {
+		fmt.Printf("Processing files from: %s\n", sourcePath)
+		documents, pathStats, err := processor.ProcessFiles(sourcePath, cfg.StripPath)
+		if err != nil {
+			return fmt.Errorf("failed to process files from %s: %w", sourcePath, err)
+		}
+		allDocuments = append(allDocuments, documents...)
+		stats.FilesProcessed += pathStats.FilesProcessed
+		stats.FilesSkipped += pathStats.FilesSkipped
+		stats.Errors = append(stats.Errors, pathStats.Errors...)
 	}
 
-	if len(documents) == 0 {
+	if len(allDocuments) == 0 {
 		fmt.Println("No documents to process.")
 		return nil
 	}
@@ -170,7 +179,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Insert documents
 	ctx := context.Background()
-	if err := dbClient.InsertDocuments(ctx, documents, stats); err != nil {
+	if err := dbClient.InsertDocuments(ctx, allDocuments, stats); err != nil {
 		return fmt.Errorf("failed to insert documents: %w", err)
 	}
 

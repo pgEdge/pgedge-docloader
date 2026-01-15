@@ -14,7 +14,7 @@ documentation directly from Git repositories. This is useful for:
 | `--git-url`      | Yes*     | Git repository URL to clone                      |
 | `--git-branch`   | No       | Branch to checkout (default: repository default) |
 | `--git-tag`      | No       | Tag to checkout (mutually exclusive with branch) |
-| `--git-doc-path` | No       | Path within repository to process                |
+| `--git-doc-path` | No       | Path within repository to process (repeatable)   |
 | `--git-clone-dir`| No       | Directory to store cloned repositories           |
 | `--git-keep-clone`| No      | Keep cloned repository after processing          |
 | `--git-skip-fetch`| No      | Skip fetch if repository already exists          |
@@ -60,6 +60,29 @@ pgedge-docloader \
     --git-url https://github.com/org/project.git \
     --git-doc-path "docs/**/*.md" \
     --config config.yml
+```
+
+## Multiple Source Patterns
+
+You can specify multiple `--git-doc-path` options to process files from
+different locations:
+
+```bash
+# Process both docs directory and root-level markdown files
+pgedge-docloader \
+    --git-url https://github.com/org/project.git \
+    --git-doc-path "docs/**/*.md" \
+    --git-doc-path "*.md" \
+    --config config.yml
+```
+
+In a configuration file, use a YAML list:
+
+```yaml
+git-url: https://github.com/org/project.git
+git-doc-path:
+    - "docs/**/*.md"
+    - "*.md"
 ```
 
 ## Working with Branches and Tags
@@ -125,7 +148,9 @@ Git source options can also be specified in a configuration file:
 # Git source configuration
 git-url: https://github.com/org/docs-repo.git
 git-branch: main
-git-doc-path: docs
+git-doc-path:
+    - "docs/**/*.md"
+    - "*.md"
 git-clone-dir: /var/cache/docloader/repos
 git-keep-clone: true
 

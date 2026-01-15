@@ -174,12 +174,16 @@ func (gs *GitSource) checkout() error {
     return nil
 }
 
-// GetSourcePath returns the path to process files from
-func (gs *GitSource) GetSourcePath() string {
-    if gs.config.GitDocPath != "" {
-        return filepath.Join(gs.repoPath, gs.config.GitDocPath)
+// GetSourcePaths returns the paths to process files from
+func (gs *GitSource) GetSourcePaths() []string {
+    if len(gs.config.GitDocPath) > 0 {
+        paths := make([]string, len(gs.config.GitDocPath))
+        for i, docPath := range gs.config.GitDocPath {
+            paths[i] = filepath.Join(gs.repoPath, docPath)
+        }
+        return paths
     }
-    return gs.repoPath
+    return []string{gs.repoPath}
 }
 
 // Cleanup removes the cloned repository if configured
