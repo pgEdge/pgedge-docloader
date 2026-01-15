@@ -13,7 +13,7 @@ pgEdge Document Loader is open-source, and licensed with the
 
 Before building Document Loader, install:
 
-- Go 1.21 or later.
+- Go 1.23 or later.
 - PostgreSQL version 12 or later.
 - Make (optional, for using Makefile targets to build from source).
 
