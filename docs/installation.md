@@ -1,13 +1,13 @@
 # Installation
 
 pgEdge Document Loader loads documents into a Postgres database in Markdown
-format. You can install Document Loader with a 
+format. You can install Document Loader with a
 [pgEdge Enterprise Postgres](https://docs.pgedge.com/enterprise/) package
-or build pgEdge Document Loader from source code stored in the 
+or build pgEdge Document Loader from source code stored in the
 [pgEdge repository](https://github.com/pgEdge/pgedge-docloader).
 
-pgEdge Document Loader is open-source, and licensed with the 
-[PostgreSQL license](LICENCE.md).  
+pgEdge Document Loader is open-source, and licensed with the
+[PostgreSQL license](LICENCE.md).
 
 ## Prerequisites
 
@@ -25,6 +25,7 @@ To build Document Loader from source, clone the `pgedge-docloader` repository:
 git clone https://github.com/pgedge/pgedge-docloader.git
 cd pgedge-docloader
 ```
+
 Then, use `make` to ensure that your Go installation is configured properly:
 
 ```bash
@@ -58,7 +59,8 @@ when you run the `make` command:
 ```bash
 PREFIX=/opt/local make install
 ```
-**Verify the Installation**
+
+## Verify the Installation
 
 After building Document Loader, you can verify the installation worked by 
 retrieving information about the tool:
