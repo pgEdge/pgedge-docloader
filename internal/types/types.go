@@ -52,17 +52,17 @@ type Document struct {
 // Config represents the application configuration
 type Config struct {
 	// Source configuration - Local (mutually exclusive with Git source)
-	Source    string
+	Source    []string // Source paths/patterns (supports multiple via repeated flag or YAML list)
 	StripPath bool
 
 	// Source configuration - Git (mutually exclusive with local source)
-	GitURL       string // Git repository URL
-	GitBranch    string // Branch to checkout (mutually exclusive with GitTag)
-	GitTag       string // Tag to checkout (mutually exclusive with GitBranch)
-	GitDocPath   string // Path within repo to process (supports glob patterns)
-	GitCloneDir  string // Directory to store cloned repos (default: temp)
-	GitKeepClone bool   // Keep cloned repo after processing
-	GitSkipFetch bool   // Skip fetch if repo already exists
+	GitURL       string   // Git repository URL
+	GitBranch    string   // Branch to checkout (mutually exclusive with GitTag)
+	GitTag       string   // Tag to checkout (mutually exclusive with GitBranch)
+	GitDocPath   []string // Paths within repo to process (supports multiple patterns)
+	GitCloneDir  string   // Directory to store cloned repos (default: temp)
+	GitKeepClone bool     // Keep cloned repo after processing
+	GitSkipFetch bool     // Skip fetch if repo already exists
 
 	// Database configuration
 	DBHost     string

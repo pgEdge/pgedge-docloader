@@ -50,14 +50,14 @@ func Load(cmd *cobra.Command) (*types.Config, error) {
 
 	// Load configuration values (CLI flags override config file)
 	// Local source configuration
-	cfg.Source = viper.GetString("source")
+	cfg.Source = viper.GetStringSlice("source")
 	cfg.StripPath = viper.GetBool("strip-path")
 
 	// Git source configuration
 	cfg.GitURL = viper.GetString("git-url")
 	cfg.GitBranch = viper.GetString("git-branch")
 	cfg.GitTag = viper.GetString("git-tag")
-	cfg.GitDocPath = viper.GetString("git-doc-path")
+	cfg.GitDocPath = viper.GetStringSlice("git-doc-path")
 	cfg.GitCloneDir = viper.GetString("git-clone-dir")
 	cfg.GitKeepClone = viper.GetBool("git-keep-clone")
 	cfg.GitSkipFetch = viper.GetBool("git-skip-fetch")
@@ -113,7 +113,7 @@ func Load(cmd *cobra.Command) (*types.Config, error) {
 	// Resolve relative paths relative to config file directory
 	if cfg.ConfigFile != "" {
 		configDir := filepath.Dir(cfg.ConfigFile)
-		cfg.Source = resolvePath(cfg.Source, configDir)
+		cfg.Source = resolvePaths(cfg.Source, configDir)
 		cfg.GitCloneDir = resolvePath(cfg.GitCloneDir, configDir)
 		cfg.DBSSLCert = resolvePath(cfg.DBSSLCert, configDir)
 		cfg.DBSSLKey = resolvePath(cfg.DBSSLKey, configDir)
@@ -144,6 +144,15 @@ func resolvePath(path, baseDir string) string {
 		return path
 	}
 	return filepath.Join(baseDir, path)
+}
+
+// resolvePaths resolves multiple paths relative to a base directory
+func resolvePaths(paths []string, baseDir string) []string {
+	resolved := make([]string, len(paths))
+	for i, path := range paths {
+		resolved[i] = resolvePath(path, baseDir)
+	}
+	return resolved
 }
 
 // getPassword gets the database password from various sources
@@ -210,10 +219,10 @@ func readPgPass() (string, error) {
 // validate validates the configuration
 func validate(cfg *types.Config) error {
 	// Source validation: either local source or git-url, but not both
-	if cfg.Source == "" && cfg.GitURL == "" {
+	if len(cfg.Source) == 0 && cfg.GitURL == "" {
 		return fmt.Errorf("either --source or --git-url is required")
 	}
-	if cfg.Source != "" && cfg.GitURL != "" {
+	if len(cfg.Source) > 0 && cfg.GitURL != "" {
 		return fmt.Errorf("--source and --git-url are mutually exclusive")
 	}
 

@@ -26,6 +26,13 @@ and this project adheres to
     - Automatic cleanup of temporary clone directories
     - Support for both HTTPS and SSH repository URLs
 
+- **Multiple source patterns**: Both `--source` and `--git-doc-path` now
+  support multiple patterns
+
+    - Repeat the flag to specify multiple patterns on the command line
+    - Use a YAML list in configuration files for multiple patterns
+    - Example: `--source "docs/**/*.md" --source "*.md"`
+
 ## [1.0.0-beta1] - 2025-12-15
 
 ### Changed

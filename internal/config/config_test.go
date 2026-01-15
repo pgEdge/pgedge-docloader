@@ -63,7 +63,7 @@ func TestValidate(t *testing.T) {
 		{
 			"Valid config",
 			&types.Config{
-				Source:           "/path/to/source",
+				Source:           []string{"/path/to/source"},
 				DBHost:           "localhost",
 				DBName:           "testdb",
 				DBUser:           "testuser",
@@ -98,7 +98,7 @@ func TestValidate(t *testing.T) {
 		{
 			"Both source and git-url",
 			&types.Config{
-				Source:           "/path/to/source",
+				Source:           []string{"/path/to/source"},
 				GitURL:           "https://github.com/org/repo.git",
 				DBHost:           "localhost",
 				DBName:           "testdb",
@@ -151,7 +151,7 @@ func TestValidate(t *testing.T) {
 		{
 			"Missing DB host",
 			&types.Config{
-				Source:           "/path/to/source",
+				Source:           []string{"/path/to/source"},
 				DBName:           "testdb",
 				DBUser:           "testuser",
 				DBTable:          "testtable",
@@ -162,7 +162,7 @@ func TestValidate(t *testing.T) {
 		{
 			"Missing DB name",
 			&types.Config{
-				Source:           "/path/to/source",
+				Source:           []string{"/path/to/source"},
 				DBHost:           "localhost",
 				DBUser:           "testuser",
 				DBTable:          "testtable",
@@ -173,7 +173,7 @@ func TestValidate(t *testing.T) {
 		{
 			"Missing DB user",
 			&types.Config{
-				Source:           "/path/to/source",
+				Source:           []string{"/path/to/source"},
 				DBHost:           "localhost",
 				DBName:           "testdb",
 				DBTable:          "testtable",
@@ -184,7 +184,7 @@ func TestValidate(t *testing.T) {
 		{
 			"Missing DB table",
 			&types.Config{
-				Source:           "/path/to/source",
+				Source:           []string{"/path/to/source"},
 				DBHost:           "localhost",
 				DBName:           "testdb",
 				DBUser:           "testuser",
@@ -195,7 +195,7 @@ func TestValidate(t *testing.T) {
 		{
 			"Missing all columns",
 			&types.Config{
-				Source:  "/path/to/source",
+				Source:  []string{"/path/to/source"},
 				DBHost:  "localhost",
 				DBName:  "testdb",
 				DBUser:  "testuser",
