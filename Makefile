@@ -6,7 +6,7 @@ BINARY_PATH=bin/$(BINARY_NAME)
 GO=go
 GOFLAGS=
 LDFLAGS=
-PREFIX=/usr/local
+PREFIX ?= /usr/local
 
 all: build
 
