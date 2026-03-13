@@ -8,30 +8,42 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-13
+
 ### Added
 
-- **Git repository source support**: Clone and process documentation directly
-  from Git repositories as an alternative to local files
+- **Git repository source support**: Clone and process
+  documentation directly from Git repositories as an
+  alternative to local files
 
-    - `--git-url` option to specify repository URL (mutually exclusive with
-      `--source`)
+    - `--git-url` option to specify repository URL
+      (mutually exclusive with `--source`)
     - `--git-branch` option to checkout a specific branch
-    - `--git-tag` option to checkout a specific tag (mutually exclusive with
-      `--git-branch`)
-    - `--git-doc-path` option to specify path within repository (supports glob
-      patterns)
-    - `--git-clone-dir` option for persistent clone directory
-    - `--git-keep-clone` option to preserve cloned repository after processing
-    - `--git-skip-fetch` option to skip fetch for existing clones
+    - `--git-tag` option to checkout a specific tag
+      (mutually exclusive with `--git-branch`)
+    - `--git-doc-path` option to specify path within
+      repository (supports glob patterns)
+    - `--git-clone-dir` option for persistent clone
+      directory
+    - `--git-keep-clone` option to preserve cloned
+      repository after processing
+    - `--git-skip-fetch` option to skip fetch for existing
+      clones
     - Automatic cleanup of temporary clone directories
     - Support for both HTTPS and SSH repository URLs
 
-- **Multiple source patterns**: Both `--source` and `--git-doc-path` now
-  support multiple patterns
+- **Multiple source patterns**: Both `--source` and
+  `--git-doc-path` now support multiple patterns
 
-    - Repeat the flag to specify multiple patterns on the command line
-    - Use a YAML list in configuration files for multiple patterns
+    - Repeat the flag to specify multiple patterns on the
+      command line
+    - Use a YAML list in configuration files for multiple
+      patterns
     - Example: `--source "docs/**/*.md" --source "*.md"`
+
+### Changed
+
+- Promoted to stable release status
 
 ## [1.0.0-beta1] - 2025-12-15
 
