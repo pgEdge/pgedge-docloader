@@ -1,0 +1,9 @@
+# Load Markdown files into PostgreSQL
+source: "./docs"
+db-host: localhost
+db-name: mydb
+db-user: myuser
+db-table: documents
+col-doc-content: content
+col-file-name: filename
+update: true
