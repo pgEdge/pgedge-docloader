@@ -288,9 +288,11 @@ func extractRepoName(url string) string {
 	parts := strings.Split(url, "/")
 	name := parts[len(parts)-1]
 
-	// Fall back for anything that is not a plain subdirectory name: "" or "."
-	// would clone over the clone directory itself, ".." over its parent
-	if name == "" || name == "." || name == ".." {
+	// Fall back for anything that is not a plain subdirectory name. "" or "."
+	// would clone over the clone directory itself and ".." over its parent; a
+	// name containing a path separator ('/' or, on Windows, '\') would let a
+	// crafted URL escape the clone directory through filepath.Join.
+	if name == "" || name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
 		return "repo"
 	}
 

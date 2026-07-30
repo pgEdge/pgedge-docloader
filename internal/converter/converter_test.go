@@ -322,7 +322,7 @@ func TestIsUnderline(t *testing.T) {
 		{"Mixed punctuation", "==--==", false},
 		{"Non-punctuation start", "abc", false},
 		{"Multi-byte rune truncating to a dash", "--ĭ", false},
-		{"Multi-byte rune truncating to an equals", "==ő", false},
+		{"Multi-byte rune truncating to an equals", "==Ľ", false},
 	}
 
 	for _, tt := range tests {

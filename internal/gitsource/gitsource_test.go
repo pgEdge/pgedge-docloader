@@ -60,6 +60,11 @@ func TestExtractRepoName(t *testing.T) {
 			url:      "https://github.com/org/..",
 			expected: "repo",
 		},
+		{
+			name:     "Backslash traversal falls back rather than escaping the clone dir on Windows",
+			url:      "https://github.com/org/..\\..\\outside",
+			expected: "repo",
+		},
 	}
 
 	for _, tt := range tests {
