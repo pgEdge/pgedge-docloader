@@ -186,6 +186,11 @@ func readPgPass() (string, error) {
 	}
 
 	pgpassFile := filepath.Join(homeDir, ".pgpass")
+
+	// #nosec G304 -- not a traversal risk: the file name is fixed and the
+	// directory comes from os.UserHomeDir(), not from user input. Symlinked
+	// .pgpass files are a normal dotfile-management pattern, so the path is
+	// deliberately not confined with os.Root.
 	file, err := os.Open(pgpassFile)
 	if err != nil {
 		return "", err

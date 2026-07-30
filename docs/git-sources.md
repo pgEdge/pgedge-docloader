@@ -115,6 +115,35 @@ pgedge-docloader \
     `--git-branch` and `--git-tag` are mutually exclusive. You cannot specify
     both options at the same time.
 
+## Accepted Branch and Tag Names
+
+Branch and tag names are passed to `git` as command line arguments, so they
+are validated before use to make sure they cannot be read as options. A name
+is accepted only when it:
+
+- Starts with a letter or a digit.
+- Contains only letters, digits and the characters `.`, `_`, `/` and `-`.
+- Does not contain `..`, and does not end with `/` or `.lock`.
+
+Anything else is rejected with an error before `git` is run. This covers
+ordinary names such as `main`, `release/18-stable` and `v1.2.3`, while
+refusing input such as `--upload-pack=...` that `git` would otherwise
+interpret as an option.
+
+## Symbolic Links in Cloned Repositories
+
+Documents are read through a directory scoped to the source tree, so a
+symbolic link cannot be used to pull a file in from elsewhere on the machine.
+This matters when loading a repository you do not control: without it, a link
+named `guide.md` pointing at `~/.ssh/id_rsa` would load that key into your
+database.
+
+- Relative links that stay inside the source tree are followed as usual.
+- Links that resolve outside the tree are skipped, and the run reports an
+  error for each one.
+- Absolute links are always skipped, because their target cannot be checked
+  against the source tree.
+
 ## Persistent Clone Directory
 
 By default, repositories are cloned to a temporary directory and removed after
@@ -209,6 +238,7 @@ The tool will fail with a clear error message if:
 
 - Git is not installed on the system
 - The repository URL is invalid or inaccessible
+- The repository URL or the branch or tag name is not in an accepted form
 - The specified branch or tag does not exist
 - The `--git-doc-path` does not exist in the repository
 

@@ -308,8 +308,10 @@ func isUnderline(line string) bool {
 		return false
 	}
 
+	// Compare as runes: truncating a multi-byte rune to a byte can collide
+	// with char and wrongly accept a line such as "--ĭ" as an underline.
 	for _, c := range line {
-		if byte(c) != char {
+		if c != rune(char) {
 			return false
 		}
 	}

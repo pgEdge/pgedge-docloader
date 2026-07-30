@@ -12,6 +12,7 @@ package processor
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -70,10 +71,16 @@ func TestProcessFile(t *testing.T) {
 		},
 	}
 
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("failed to open test root: %v", err)
+	}
+	defer root.Close()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			filePath := filepath.Join(tmpDir, tt.filename)
-			doc, err := processFile(filePath, tt.stripPath)
+			doc, err := processFile(root, tt.filename, filePath, tt.stripPath)
 
 			if tt.wantErr {
 				if err == nil {
@@ -240,4 +247,115 @@ func TestProcessFiles(t *testing.T) {
 			t.Errorf("expected %d documents, got %d", expectedFiles, len(docs))
 		}
 	})
+}
+
+func TestSourceRoot(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected string
+	}{
+		{"Plain directory", "docs", "docs"},
+		{"Trailing wildcard", filepath.Join("docs", "*.md"), "docs"},
+		{"Recursive wildcard", filepath.Join("docs", "**", "*.md"), "docs"},
+		{"Wildcard in directory", filepath.Join("docs", "*", "index.md"), "docs"},
+		{"Bare wildcard", "*.md", "."},
+		{"Character class", filepath.Join("docs", "[ab]*.md"), "docs"},
+		{"Dot-slash prefix", filepath.Join(".", "*.md"), "."},
+		{"Filesystem root", string(filepath.Separator), string(filepath.Separator)},
+		{"Wildcard at filesystem root", string(filepath.Separator) + "*.md", string(filepath.Separator)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := sourceRoot(tt.source); got != tt.expected {
+				t.Errorf("expected root %q, got %q", tt.expected, got)
+			}
+		})
+	}
+}
+
+// A glob whose directory does not exist matches nothing. It must not fail the
+// run, because a caller loading several source paths would lose all of them.
+func TestProcessFilesGlobWithMissingDirectory(t *testing.T) {
+	pattern := filepath.Join(t.TempDir(), "absent", "*.md")
+
+	docs, stats, err := ProcessFiles(pattern, false)
+	if err != nil {
+		t.Fatalf("expected a missing glob directory to match nothing, got: %v", err)
+	}
+
+	if len(docs) != 0 || stats.FilesProcessed != 0 {
+		t.Errorf("expected no documents, got %d docs and %d processed", len(docs), stats.FilesProcessed)
+	}
+}
+
+// A symlink pointing outside the source tree must be reported as an error and
+// its target must never appear in the loaded documents.
+func TestProcessFilesRejectsSymlinkEscape(t *testing.T) {
+	secretDir := t.TempDir()
+	secret := filepath.Join(secretDir, "secret.md")
+	if err := os.WriteFile(secret, []byte("# Secret\n\ntop secret"), 0600); err != nil {
+		t.Fatalf("failed to create secret file: %v", err)
+	}
+
+	sourceDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(sourceDir, "ok.md"), []byte("# Ok\n\nfine"), 0600); err != nil {
+		t.Fatalf("failed to create source file: %v", err)
+	}
+	if err := os.Symlink(secret, filepath.Join(sourceDir, "escape.md")); err != nil {
+		t.Skipf("symlinks unsupported on this platform: %v", err)
+	}
+
+	docs, stats, err := ProcessFiles(sourceDir, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if stats.FilesProcessed != 1 {
+		t.Errorf("expected only the in-tree file to be processed, got %d", stats.FilesProcessed)
+	}
+
+	if !stats.HasErrors() {
+		t.Error("expected the escaping symlink to be recorded as an error")
+	}
+
+	for _, doc := range docs {
+		if strings.Contains(string(doc.SourceContent), "top secret") {
+			t.Errorf("content from outside the source tree was loaded: %s", doc.FileName)
+		}
+	}
+}
+
+// A relative symlink that stays inside the source tree is a legitimate
+// documentation layout and must still be loaded.
+func TestProcessFilesAllowsSymlinkWithinTree(t *testing.T) {
+	sourceDir := t.TempDir()
+
+	shared := filepath.Join(sourceDir, "shared")
+	if err := os.MkdirAll(shared, 0750); err != nil {
+		t.Fatalf("failed to create shared directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(shared, "doc.md"), []byte("# Shared\n\nreusable"), 0600); err != nil {
+		t.Fatalf("failed to create shared file: %v", err)
+	}
+
+	link := filepath.Join(sourceDir, "linked.md")
+	if err := os.Symlink(filepath.Join("shared", "doc.md"), link); err != nil {
+		t.Skipf("symlinks unsupported on this platform: %v", err)
+	}
+
+	_, stats, err := ProcessFiles(sourceDir, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if stats.HasErrors() {
+		t.Errorf("in-tree symlink should load cleanly, got errors: %v", stats.Errors)
+	}
+
+	// The shared file plus the symlink pointing at it
+	if stats.FilesProcessed != 2 {
+		t.Errorf("expected 2 files processed, got %d", stats.FilesProcessed)
+	}
 }

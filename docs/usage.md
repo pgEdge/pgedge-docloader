@@ -44,6 +44,12 @@ Including the `--strip-path` option, instructs Document Loader to save `/long/pa
 
     Command-line flags always take precedence over configuration file settings.
 
+Documents are read through a directory scoped to the source path, so a
+symbolic link cannot be used to pull a file in from outside that tree.
+Relative links that stay inside the tree are followed as usual; links that
+resolve outside it, and absolute links, are skipped and reported as errors.
+See [Using Git Repository Sources](git-sources.md) for why this matters when
+loading a repository you do not control.
 
 ## Using pgEdge Document Loader
 
