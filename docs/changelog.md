@@ -8,6 +8,30 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Security
+
+- Branch and tag names are validated before being passed
+  to `git`, so a name such as `--upload-pack=...` can no
+  longer be read as a command line option
+- Repository URLs are separated from options with `--`,
+  and clone paths are resolved to absolute paths, for the
+  same reason
+- Documents are read through a directory scoped to the
+  source tree, so a symbolic link in an untrusted
+  repository can no longer pull in a file from elsewhere
+  on the machine
+- Clone directories are created with `0750` rather than
+  `0755` permissions
+- Updated `golang.org/x/net`, `golang.org/x/text` and
+  `github.com/jackc/pgx/v5` to versions without known
+  vulnerabilities
+
+### Fixed
+
+- RST underline detection no longer accepts a line
+  containing a multi-byte character whose low byte matches
+  the underline character, such as `--ĭ`
+
 ## [1.0.0] - 2026-03-13
 
 ### Added

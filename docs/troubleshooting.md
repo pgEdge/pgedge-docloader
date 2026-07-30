@@ -128,6 +128,39 @@ No documents to process.
    pgedge-docloader formats
    ```
 
+### File Skipped as a Symbolic Link
+
+**Error:**
+
+```
+Error processing file ./docs/guide.md: failed to open file: openat
+guide.md: path escapes from parent
+```
+
+**Cause:**
+
+The file is a symbolic link whose target is outside the source tree, or is
+an absolute link. Document Loader refuses to follow either, so that an
+untrusted repository cannot pull in a file from elsewhere on the machine.
+
+**Solutions:**
+
+1. Check where the link points:
+
+   ```bash
+   ls -l ./docs/guide.md
+   ```
+
+2. If the target is genuinely part of your documentation, move it inside the
+   source tree and make the link relative:
+
+   ```bash
+   ln -sf ../shared/guide.md ./docs/guide.md
+   ```
+
+3. If the target belongs outside the tree, load it as a separate source by
+   repeating `--source`.
+
 ### Unsupported File Type
 
 **Error (single file):**

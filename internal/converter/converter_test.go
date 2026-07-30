@@ -304,6 +304,36 @@ func TestGetSupportedExtensions(t *testing.T) {
 	}
 }
 
+// An underline must be one punctuation character repeated. A multi-byte rune
+// whose low byte matches that character (e.g. 'ĭ' is 0x012D, low byte 0x2D
+// '-') must not be mistaken for it.
+func TestIsUnderline(t *testing.T) {
+	tests := []struct {
+		name     string
+		line     string
+		expected bool
+	}{
+		{"Equals underline", "=====", true},
+		{"Dash underline", "-----", true},
+		{"Tilde underline", "~~~~~", true},
+		{"Single character", "=", true},
+		{"Empty line", "", false},
+		{"Plain text", "Heading", false},
+		{"Mixed punctuation", "==--==", false},
+		{"Non-punctuation start", "abc", false},
+		{"Multi-byte rune truncating to a dash", "--ĭ", false},
+		{"Multi-byte rune truncating to an equals", "==Ľ", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isUnderline(tt.line); got != tt.expected {
+				t.Errorf("isUnderline(%q) = %v, expected %v", tt.line, got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestConvertRSTHeadings(t *testing.T) {
 	tests := []struct {
 		name     string

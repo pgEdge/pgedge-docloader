@@ -30,7 +30,13 @@ func ProcessFiles(source string, stripPath bool) ([]*types.Document, *types.Stat
 	fileInfo, err := os.Stat(source)
 	if err == nil && !fileInfo.IsDir() {
 		// Single file
-		doc, err := processFile(source, stripPath)
+		root, err := os.OpenRoot(filepath.Dir(source))
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to open source directory: %w", err)
+		}
+		defer root.Close()
+
+		doc, err := processFile(root, filepath.Base(source), source, stripPath)
 		if err != nil {
 			if err == converter.ErrUnsupportedFormat {
 				return nil, nil, fmt.Errorf("unsupported file type: %s", source)
@@ -76,6 +82,23 @@ func ProcessFiles(source string, stripPath bool) ([]*types.Document, *types.Stat
 			}
 		}
 
+		// Nothing matched. Return before opening a root: a pattern whose
+		// fixed prefix does not exist matches nothing rather than failing,
+		// and that has to stay true now that the prefix gets opened.
+		if len(files) == 0 {
+			return documents, stats, nil
+		}
+
+		// Every match lives under the fixed prefix of the source, so confine
+		// reads to it: a symlink escaping the documentation tree must not be
+		// followed into, say, ~/.ssh and loaded into the database
+		rootDir := sourceRoot(source)
+		root, err := os.OpenRoot(rootDir)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to open source directory: %w", err)
+		}
+		defer root.Close()
+
 		// Process each file
 		for _, file := range files {
 			if !converter.IsSupported(file) {
@@ -84,7 +107,15 @@ func ProcessFiles(source string, stripPath bool) ([]*types.Document, *types.Stat
 				continue
 			}
 
-			doc, err := processFile(file, stripPath)
+			relPath, err := filepath.Rel(rootDir, file)
+			if err != nil {
+				fmt.Printf("Error processing file %s: %v\n", file, err)
+				stats.AddError(fmt.Errorf("file %s: %w", file, err))
+				stats.FilesSkipped++
+				continue
+			}
+
+			doc, err := processFile(root, relPath, file, stripPath)
 			if err != nil {
 				fmt.Printf("Error processing file %s: %v\n", file, err)
 				stats.AddError(fmt.Errorf("file %s: %w", file, err))
@@ -98,6 +129,28 @@ func ProcessFiles(source string, stripPath bool) ([]*types.Document, *types.Stat
 	}
 
 	return documents, stats, nil
+}
+
+// sourceRoot returns the directory that every match of a source path is
+// guaranteed to live under: the deepest ancestor containing no wildcard. For a
+// plain directory that is the directory itself.
+func sourceRoot(source string) string {
+	if source == "" {
+		return "."
+	}
+
+	dir := source
+	for strings.ContainsAny(dir, "*?[]") {
+		// Stop at the top of the path rather than spinning: filepath.Dir of a
+		// filesystem or volume root returns the root itself
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return parent
+		}
+		dir = parent
+	}
+
+	return dir
 }
 
 // recursiveGlob implements recursive glob matching with ** support
@@ -145,10 +198,16 @@ func recursiveGlob(pattern string) ([]string, error) {
 	return matches, nil
 }
 
-// processFile processes a single file
-func processFile(filePath string, stripPath bool) (*types.Document, error) {
-	// Read file content
-	file, err := os.Open(filePath)
+// processFile processes a single file. The file is read through root, which
+// confines it to the source tree; relPath locates it within that root, while
+// filePath is the path as the user gave it and is what gets reported.
+func processFile(root *os.Root, relPath, filePath string, stripPath bool) (*types.Document, error) {
+	// Read file content. root.Open refuses to follow a symlink out of the
+	// source tree, so an untrusted repository cannot smuggle in a file from
+	// elsewhere on the machine. Relative symlinks within the tree still
+	// resolve; absolute ones are always refused, as os.Root cannot tell where
+	// they were meant to land.
+	file, err := root.Open(relPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -171,8 +230,9 @@ func processFile(filePath string, stripPath bool) (*types.Document, error) {
 		return nil, fmt.Errorf("failed to convert document: %w", err)
 	}
 
-	// Get file metadata
-	fileInfo, err := os.Stat(filePath)
+	// Get file metadata from the open handle, so it describes exactly the
+	// file that was read rather than whatever the path resolves to now
+	fileInfo, err := file.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file info: %w", err)
 	}

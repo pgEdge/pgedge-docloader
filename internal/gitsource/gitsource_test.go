@@ -50,6 +50,21 @@ func TestExtractRepoName(t *testing.T) {
 			url:      "git://github.com/org/repo.git",
 			expected: "repo",
 		},
+		{
+			name:     "Trailing slash falls back rather than cloning over the clone dir",
+			url:      "https://github.com/org/",
+			expected: "repo",
+		},
+		{
+			name:     "Dot-dot falls back rather than cloning over the parent",
+			url:      "https://github.com/org/..",
+			expected: "repo",
+		},
+		{
+			name:     "Backslash traversal falls back rather than escaping the clone dir on Windows",
+			url:      "https://github.com/org/..\\..\\outside",
+			expected: "repo",
+		},
 	}
 
 	for _, tt := range tests {
@@ -85,6 +100,88 @@ func TestIsGitURL(t *testing.T) {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
 		})
+	}
+}
+
+// Branch and tag names are rejected unless they are plainly refs, so nothing
+// a user supplies can reach git as an option.
+func TestValidateRef(t *testing.T) {
+	tests := []struct {
+		name    string
+		ref     string
+		wantErr bool
+	}{
+		{"Simple branch", "main", false},
+		{"Namespaced branch", "release/18-stable", false},
+		{"Version tag", "v1.2.3", false},
+		{"Underscores and dots", "feature_x.2", false},
+		{"Empty", "", true},
+		{"Leading dash reads as an option", "-oProxyCommand=id", true},
+		{"Long option", "--upload-pack=touch /tmp/pwned", true},
+		{"Shell metacharacters", "main; rm -rf /", true},
+		{"Command substitution", "$(id)", true},
+		{"Leading dot", ".hidden", true},
+		{"Double dot range", "main..other", true},
+		{"Trailing slash", "main/", true},
+		{"Lock suffix", "main.lock", true},
+		{"Reflog syntax", "main@{1}", true},
+		{"Whitespace", "my branch", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateRef("branch", tt.ref)
+			if tt.wantErr && err == nil {
+				t.Errorf("expected %q to be rejected, got nil error", tt.ref)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("expected %q to be accepted, got: %v", tt.ref, err)
+			}
+		})
+	}
+}
+
+// A repository URL that git would read as an option is rejected.
+func TestValidateURL(t *testing.T) {
+	tests := []struct {
+		name    string
+		url     string
+		wantErr bool
+	}{
+		{"HTTPS URL", "https://github.com/org/repo.git", false},
+		{"SSH URL", "git@github.com:org/repo.git", false},
+		{"Local path", "/srv/repos/docs.git", false},
+		{"Empty", "", true},
+		{"Leading dash reads as an option", "--upload-pack=id", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateURL(tt.url)
+			if tt.wantErr && err == nil {
+				t.Errorf("expected %q to be rejected, got nil error", tt.url)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("expected %q to be accepted, got: %v", tt.url, err)
+			}
+		})
+	}
+}
+
+// New must refuse a hostile branch name before any git process is started.
+func TestNewRejectsHostileRef(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not available")
+	}
+
+	cfg := &types.Config{
+		GitURL:      "https://github.com/org/repo.git",
+		GitBranch:   "--upload-pack=touch /tmp/pwned",
+		GitCloneDir: t.TempDir(),
+	}
+
+	if _, err := New(cfg); err == nil {
+		t.Fatal("expected a hostile branch name to be rejected")
 	}
 }
 
