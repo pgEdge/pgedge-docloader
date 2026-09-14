@@ -12,7 +12,7 @@
 #      release MUST exist before the RPM/DEB build cells run — hence the
 #      package jobs depend on `goreleaser`.
 #   2. Build RPMs (almalinux 9/10, amd64+arm64) and DEBs (jammy / noble /
-#      resolute / bullseye / bookworm / trixie, amd64+arm64) via
+#      resolute / bookworm / trixie, amd64+arm64) via
 #      pgedge-builder-action.
 #      Each cell's build script downloads its own source tarball from the
 #      release, so there is no artifact-staging step (unlike the Go-binary
@@ -102,7 +102,7 @@ jobs:
                   # emits cells with pg_version="" (see pgedge-detect-build-matrix README).
                   archs: '["amd64","arm64"]'
                   rpm_images: '["almalinux:9","almalinux:10"]'
-                  deb_images: '["ubuntu:jammy","ubuntu:noble","ubuntu:resolute","debian:bullseye","debian:bookworm","debian:trixie"]'
+                  deb_images: '["ubuntu:jammy","ubuntu:noble","ubuntu:resolute","debian:bookworm","debian:trixie"]'
 
     # =========================================================================
     # Tag parsing → (repo_type, component-version, component-buildnum).  On
