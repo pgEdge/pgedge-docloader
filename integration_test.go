@@ -14,7 +14,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -161,40 +160,25 @@ func createTestTable(ctx context.Context, dbClient *database.Client, cfg *types.
 	}
 	defer conn.Close(ctx)
 
-	_, err = conn.Exec(ctx, createTestTableSQL(cfg))
+	_, err = conn.Exec(ctx, createTestTableSQL)
 	return err
 }
 
-// createTestTableSQL builds the CREATE TABLE statement for the test
-// table, quoting the configured table and column names as identifiers.
-func createTestTableSQL(cfg *types.Config) string {
-	return fmt.Sprintf(`
-        CREATE TABLE IF NOT EXISTS %s (
+// createTestTableSQL and dropTestTableSQL are literal so that no SQL is
+// built at runtime; the names must match getTestConfig.
+const createTestTableSQL = `
+        CREATE TABLE IF NOT EXISTS test_documents (
             id SERIAL PRIMARY KEY,
-            %s TEXT,
-            %s TEXT,
-            %s BYTEA,
-            %s TEXT UNIQUE,
-            %s TIMESTAMP,
-            %s TIMESTAMP,
-            %s TIMESTAMP
-        )`,
-		pgx.Identifier{cfg.DBTable}.Sanitize(),
-		pgx.Identifier{cfg.ColumnDocTitle}.Sanitize(),
-		pgx.Identifier{cfg.ColumnDocContent}.Sanitize(),
-		pgx.Identifier{cfg.ColumnSourceContent}.Sanitize(),
-		pgx.Identifier{cfg.ColumnFileName}.Sanitize(),
-		pgx.Identifier{cfg.ColumnFileModified}.Sanitize(),
-		pgx.Identifier{cfg.ColumnRowCreated}.Sanitize(),
-		pgx.Identifier{cfg.ColumnRowUpdated}.Sanitize(),
-	)
-}
+            title TEXT,
+            content TEXT,
+            source BYTEA,
+            filename TEXT UNIQUE,
+            modified TIMESTAMP,
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP
+        )`
 
-// dropTestTableSQL builds the DROP TABLE statement for the test table.
-func dropTestTableSQL(cfg *types.Config) string {
-	return fmt.Sprintf("DROP TABLE IF EXISTS %s",
-		pgx.Identifier{cfg.DBTable}.Sanitize())
-}
+const dropTestTableSQL = "DROP TABLE IF EXISTS test_documents"
 
 func dropTestTable(ctx context.Context, dbClient *database.Client, cfg *types.Config) {
 	conn, err := pgx.Connect(ctx, testConnString(cfg))
@@ -203,5 +187,5 @@ func dropTestTable(ctx context.Context, dbClient *database.Client, cfg *types.Co
 	}
 	defer conn.Close(ctx)
 
-	conn.Exec(ctx, dropTestTableSQL(cfg))
+	conn.Exec(ctx, dropTestTableSQL)
 }
