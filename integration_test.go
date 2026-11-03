@@ -14,10 +14,11 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"net"
+	"net/url"
 	"os"
+	"strconv"
 	"testing"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -138,53 +139,53 @@ func TestIntegrationUpdateDocuments(t *testing.T) {
 	t.Logf("Updated %d documents", stats2.FilesUpdated)
 }
 
-func createTestTable(ctx context.Context, dbClient *database.Client, cfg *types.Config) error {
-	// This is a helper to access the pool - in a real implementation
-	// we'd expose a method to execute raw SQL
-	connStr := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s",
-		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPassword, cfg.DBSSLMode)
+// testConnString builds a connection URL for the test database, escaping
+// each component so that unusual characters in the password or database
+// name cannot alter the connection parameters.
+func testConnString(cfg *types.Config) string {
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(cfg.DBUser, cfg.DBPassword),
+		Host:     net.JoinHostPort(cfg.DBHost, strconv.Itoa(cfg.DBPort)),
+		Path:     cfg.DBName,
+		RawQuery: url.Values{"sslmode": {cfg.DBSSLMode}}.Encode(),
+	}
+	return u.String()
+}
 
-	conn, err := pgx.Connect(ctx, connStr)
+func createTestTable(ctx context.Context, dbClient *database.Client, cfg *types.Config) error {
+	conn, err := pgx.Connect(ctx, testConnString(cfg))
 	if err != nil {
 		return err
 	}
 	defer conn.Close(ctx)
 
-	createSQL := fmt.Sprintf(`
-        CREATE TABLE IF NOT EXISTS %s (
-            id SERIAL PRIMARY KEY,
-            %s TEXT,
-            %s TEXT,
-            %s BYTEA,
-            %s TEXT UNIQUE,
-            %s TIMESTAMP,
-            %s TIMESTAMP,
-            %s TIMESTAMP
-        )`,
-		cfg.DBTable,
-		cfg.ColumnDocTitle,
-		cfg.ColumnDocContent,
-		cfg.ColumnSourceContent,
-		cfg.ColumnFileName,
-		cfg.ColumnFileModified,
-		cfg.ColumnRowCreated,
-		cfg.ColumnRowUpdated,
-	)
-
-	_, err = conn.Exec(ctx, createSQL)
+	_, err = conn.Exec(ctx, createTestTableSQL)
 	return err
 }
 
-func dropTestTable(ctx context.Context, dbClient *database.Client, cfg *types.Config) {
-	connStr := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s",
-		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPassword, cfg.DBSSLMode)
+// createTestTableSQL and dropTestTableSQL are literal so that no SQL is
+// built at runtime; the names must match getTestConfig.
+const createTestTableSQL = `
+        CREATE TABLE IF NOT EXISTS test_documents (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            content TEXT,
+            source BYTEA,
+            filename TEXT UNIQUE,
+            modified TIMESTAMP,
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP
+        )`
 
-	conn, err := pgx.Connect(ctx, connStr)
+const dropTestTableSQL = "DROP TABLE IF EXISTS test_documents"
+
+func dropTestTable(ctx context.Context, dbClient *database.Client, cfg *types.Config) {
+	conn, err := pgx.Connect(ctx, testConnString(cfg))
 	if err != nil {
 		return
 	}
 	defer conn.Close(ctx)
 
-	dropSQL := fmt.Sprintf("DROP TABLE IF EXISTS %s", cfg.DBTable)
-	conn.Exec(ctx, dropSQL)
+	conn.Exec(ctx, dropTestTableSQL)
 }
