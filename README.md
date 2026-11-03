@@ -51,7 +51,7 @@ The pgEdge Document Loader automatically converts documents (HTML, Markdown, reS
 
 Before installing and using pgEdge Document Loader, download and install:
 
-- Go 1.23 or later
+- Go 1.26.10 or later
 - PostgreSQL 14 or later
 
 Getting started with pgEdge Document Loader involves three steps:

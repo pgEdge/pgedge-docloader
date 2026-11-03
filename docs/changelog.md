@@ -25,6 +25,8 @@ and this project adheres to
 - Updated `golang.org/x/net`, `golang.org/x/text` and
   `github.com/jackc/pgx/v5` to versions without known
   vulnerabilities
+- Built with Go 1.26.10, which distrusts the compromised
+  eMudhra intermediate CAs (CVE-2026-111943)
 
 ### Fixed
 
