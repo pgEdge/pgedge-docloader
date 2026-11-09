@@ -22,9 +22,15 @@ and this project adheres to
   on the machine
 - Clone directories are created with `0750` rather than
   `0755` permissions
-- Updated `golang.org/x/net`, `golang.org/x/text` and
-  `github.com/jackc/pgx/v5` to versions without known
-  vulnerabilities
+- Built with Go 1.26, picking up the standard library
+  security fixes that Go 1.25 no longer receives
+- Updated `golang.org/x/net`, `golang.org/x/text`,
+  `github.com/jackc/pgx/v5` and other dependencies to
+  versions without known vulnerabilities
+
+### Changed
+
+- Building from source now requires Go 1.26.10 or later
 
 ### Fixed
 
