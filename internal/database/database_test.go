@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/pgedge/pgedge-docloader/internal/types"
 )
 
@@ -69,6 +70,76 @@ func TestBuildConnectionString(t *testing.T) {
 				t.Errorf("\nexpected: %s\ngot:      %s", tt.expected, result)
 			}
 		})
+	}
+}
+
+func TestBuildConnectionStringQuoting(t *testing.T) {
+	tests := []struct {
+		name     string
+		password string
+		expected string
+	}{
+		{"Space", "pass word", "password='pass word'"},
+		{"Single quote", "it's", `password='it\'s'`},
+		{"Backslash", `back\slash`, `password='back\\slash'`},
+		{"Tab", "tab\there", "password='tab\there'"},
+		{"Plain", "plain", "password=plain"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &types.Config{
+				DBHost:     "localhost",
+				DBPort:     5432,
+				DBName:     "testdb",
+				DBUser:     "testuser",
+				DBPassword: tt.password,
+			}
+			expected := "host=localhost port=5432 dbname=testdb user=testuser " +
+				tt.expected
+			result := buildConnectionString(cfg)
+			if result != expected {
+				t.Errorf("\nexpected: %s\ngot:      %s", expected, result)
+			}
+		})
+	}
+}
+
+func TestBuildConnectionStringRoundTrip(t *testing.T) {
+	// Values that contain connection string syntax must reach pgx
+	// unchanged, and must not be able to inject further settings.
+	cfg := &types.Config{
+		DBHost:     "db.example.com",
+		DBPort:     5433,
+		DBName:     "my db",
+		DBUser:     "o'brien",
+		DBPassword: `x sslmode=disable host=evil' \`,
+		DBSSLMode:  "require",
+	}
+
+	connCfg, err := pgx.ParseConfig(buildConnectionString(cfg))
+	if err != nil {
+		t.Fatalf("failed to parse connection string: %v", err)
+	}
+
+	if connCfg.Host != cfg.DBHost {
+		t.Errorf("host: expected %q, got %q", cfg.DBHost, connCfg.Host)
+	}
+	if connCfg.Port != uint16(cfg.DBPort) {
+		t.Errorf("port: expected %d, got %d", cfg.DBPort, connCfg.Port)
+	}
+	if connCfg.Database != cfg.DBName {
+		t.Errorf("dbname: expected %q, got %q", cfg.DBName, connCfg.Database)
+	}
+	if connCfg.User != cfg.DBUser {
+		t.Errorf("user: expected %q, got %q", cfg.DBUser, connCfg.User)
+	}
+	if connCfg.Password != cfg.DBPassword {
+		t.Errorf("password: expected %q, got %q", cfg.DBPassword,
+			connCfg.Password)
+	}
+	if connCfg.TLSConfig == nil {
+		t.Error("sslmode was overridden: TLS is disabled")
 	}
 }
 

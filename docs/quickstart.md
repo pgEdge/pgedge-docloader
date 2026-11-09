@@ -2,7 +2,7 @@
 
 Before installing and using pgEdge Document Loader, download and install:
 
-- Go, version 1.21 or later
+- Go, version 1.26.10 or later
 - Postgres, version 12 or later
 
 Getting started with pgEdge Document Loader involves three steps:

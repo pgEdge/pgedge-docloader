@@ -22,12 +22,22 @@ and this project adheres to
   on the machine
 - Clone directories are created with `0750` rather than
   `0755` permissions
-- Updated `golang.org/x/net`, `golang.org/x/text` and
-  `github.com/jackc/pgx/v5` to versions without known
-  vulnerabilities
+- Built with Go 1.26, picking up the standard library
+  security fixes that Go 1.25 no longer receives
+- Updated `golang.org/x/net`, `golang.org/x/text`,
+  `github.com/jackc/pgx/v5` and other dependencies to
+  versions without known vulnerabilities
+
+### Changed
+
+- Building from source now requires Go 1.26.10 or later
 
 ### Fixed
 
+- Database connection settings containing spaces, single
+  quotes or backslashes, such as a password, are now quoted
+  correctly; previously they could break the connection or
+  be read as additional connection settings
 - RST underline detection no longer accepts a line
   containing a multi-byte character whose low byte matches
   the underline character, such as `--ĭ`
