@@ -12,6 +12,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -290,34 +291,65 @@ func (c *Client) buildUpdateQuery(doc *types.Document) (string, []interface{}) {
 	return query, args
 }
 
-// buildConnectionString builds a PostgreSQL connection string
+// buildConnectionString builds a PostgreSQL keyword/value connection
+// string. Every value is passed through quoteConnValue so that one
+// containing spaces or quotes, such as a password, cannot break the
+// string or inject further settings.
 func buildConnectionString(cfg *types.Config) string {
 	var parts []string
 
-	parts = append(parts, fmt.Sprintf("host=%s", cfg.DBHost))
-	parts = append(parts, fmt.Sprintf("port=%d", cfg.DBPort))
-	parts = append(parts, fmt.Sprintf("dbname=%s", cfg.DBName))
-	parts = append(parts, fmt.Sprintf("user=%s", cfg.DBUser))
+	add := func(key, value string) {
+		parts = append(parts, key+"="+quoteConnValue(value))
+	}
+
+	add("host", cfg.DBHost)
+	add("port", strconv.Itoa(cfg.DBPort))
+	add("dbname", cfg.DBName)
+	add("user", cfg.DBUser)
 
 	if cfg.DBPassword != "" {
-		parts = append(parts, fmt.Sprintf("password=%s", cfg.DBPassword))
+		add("password", cfg.DBPassword)
 	}
 
 	if cfg.DBSSLMode != "" {
-		parts = append(parts, fmt.Sprintf("sslmode=%s", cfg.DBSSLMode))
+		add("sslmode", cfg.DBSSLMode)
 	}
 
 	if cfg.DBSSLCert != "" {
-		parts = append(parts, fmt.Sprintf("sslcert=%s", cfg.DBSSLCert))
+		add("sslcert", cfg.DBSSLCert)
 	}
 
 	if cfg.DBSSLKey != "" {
-		parts = append(parts, fmt.Sprintf("sslkey=%s", cfg.DBSSLKey))
+		add("sslkey", cfg.DBSSLKey)
 	}
 
 	if cfg.DBSSLRoot != "" {
-		parts = append(parts, fmt.Sprintf("sslrootcert=%s", cfg.DBSSLRoot))
+		add("sslrootcert", cfg.DBSSLRoot)
 	}
 
 	return strings.Join(parts, " ")
+}
+
+// quoteConnValue quotes a connection string value following libpq's
+// rules: a value that is empty or contains whitespace, a single quote
+// or a backslash is wrapped in single quotes, with any single quote or
+// backslash inside it escaped by a backslash. Other values are returned
+// unchanged.
+func quoteConnValue(value string) string {
+	if value != "" && !strings.ContainsAny(value, " \t\n\r\v\f'\\") {
+		return value
+	}
+
+	var sb strings.Builder
+	sb.Grow(len(value) + 2)
+	sb.WriteByte('\'')
+	for i := 0; i < len(value); i++ {
+		if value[i] == '\'' || value[i] == '\\' {
+			sb.WriteByte('\\')
+		}
+		sb.WriteByte(value[i])
+	}
+	sb.WriteByte('\'')
+
+	return sb.String()
 }

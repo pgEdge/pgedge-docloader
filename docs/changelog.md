@@ -28,6 +28,10 @@ and this project adheres to
 
 ### Fixed
 
+- Database connection settings containing spaces, single
+  quotes or backslashes, such as a password, are now quoted
+  correctly; previously they could break the connection or
+  be read as additional connection settings
 - RST underline detection no longer accepts a line
   containing a multi-byte character whose low byte matches
   the underline character, such as `--ĭ`
