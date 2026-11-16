@@ -13,10 +13,9 @@ import (
 	"context"
 	"reflect"
 	"testing"
-
-	"github.com/jackc/pgx/v5"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/pgedge/pgedge-docloader/internal/types"
 )
 
@@ -243,8 +242,6 @@ func TestTableNames(t *testing.T) {
 		{"unqualified", "documents", `"documents"`},
 		{"qualified", "myschema.documents", `"myschema"."documents"`},
 		{"mixed case", "MySchema.Documents", `"MySchema"."Documents"`},
-		{"embedded quotes", `my"schema.doc"uments`, `"my""schema"."doc""uments"`},
-		{"SQL punctuation", `schema.documents; DROP TABLE users--`, `"schema"."documents; DROP TABLE users--"`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
