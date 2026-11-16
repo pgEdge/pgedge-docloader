@@ -10,7 +10,11 @@
 package database
 
 import (
+	"context"
+	"reflect"
 	"testing"
+
+	"github.com/jackc/pgx/v5"
 	"time"
 
 	"github.com/pgedge/pgedge-docloader/internal/types"
@@ -210,6 +214,71 @@ func TestBuildUpdateQuery(t *testing.T) {
 			lastArg := args[len(args)-1]
 			if lastArg != doc.FileName {
 				t.Errorf("expected last arg to be filename '%s', got '%v'", doc.FileName, lastArg)
+			}
+		})
+	}
+}
+
+// existenceTx captures the existence query without requiring a PostgreSQL server.
+type existenceTx struct {
+	pgx.Tx
+	query string
+	args  []interface{}
+}
+
+func (tx *existenceTx) QueryRow(_ context.Context, query string, args ...interface{}) pgx.Row {
+	tx.query, tx.args = query, args
+	return missingDocumentRow{}
+}
+
+type missingDocumentRow struct{}
+
+func (missingDocumentRow) Scan(dest ...interface{}) error {
+	*dest[0].(*int) = 0
+	return nil
+}
+
+func TestTableNames(t *testing.T) {
+	tests := []struct{ name, table, want string }{
+		{"unqualified", "documents", `"documents"`},
+		{"qualified", "myschema.documents", `"myschema"."documents"`},
+		{"mixed case", "MySchema.Documents", `"MySchema"."Documents"`},
+		{"embedded quotes", `my"schema.doc"uments`, `"my""schema"."doc""uments"`},
+		{"SQL punctuation", `schema.documents; DROP TABLE users--`, `"schema"."documents; DROP TABLE users--"`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &Client{config: &types.Config{
+				DBTable: tt.table, ColumnDocTitle: "doc.title", ColumnFileName: "filename",
+			}}
+			doc := &types.Document{Title: "title", FileName: "test.md"}
+			query, args := client.buildInsertQuery(doc)
+			want := "INSERT INTO " + tt.want + ` ("doc.title", "filename") VALUES ($1, $2)`
+			if query != want {
+				t.Errorf("insert: got %s, want %s", query, want)
+			}
+			if !reflect.DeepEqual(args, []interface{}{doc.Title, doc.FileName}) {
+				t.Errorf("insert args: %v", args)
+			}
+			query, args = client.buildUpdateQuery(doc)
+			want = "UPDATE " + tt.want + ` SET "doc.title" = $1 WHERE "filename" = $2`
+			if query != want {
+				t.Errorf("update: got %s, want %s", query, want)
+			}
+			if !reflect.DeepEqual(args, []interface{}{doc.Title, doc.FileName}) {
+				t.Errorf("update args: %v", args)
+			}
+			tx := &existenceTx{}
+			updated, err := client.updateDocument(context.Background(), tx, doc)
+			if err != nil || updated {
+				t.Fatalf("updateDocument = %v, %v", updated, err)
+			}
+			want = "SELECT COUNT(*) FROM " + tt.want + ` WHERE "filename" = $1`
+			if tx.query != want {
+				t.Errorf("existence: got %s, want %s", tx.query, want)
+			}
+			if !reflect.DeepEqual(tx.args, []interface{}{doc.FileName}) {
+				t.Errorf("existence args: %v", tx.args)
 			}
 		})
 	}

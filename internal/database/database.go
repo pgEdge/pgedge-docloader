@@ -124,7 +124,7 @@ func (c *Client) updateDocument(ctx context.Context, tx pgx.Tx, doc *types.Docum
 	}
 
 	checkQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1",
-		pgx.Identifier{c.config.DBTable}.Sanitize(),
+		pgx.Identifier(strings.Split(c.config.DBTable, ".")).Sanitize(),
 		pgx.Identifier{c.config.ColumnFileName}.Sanitize())
 
 	var count int
@@ -221,7 +221,7 @@ func (c *Client) buildInsertQuery(doc *types.Document) (string, []interface{}) {
 	}
 
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-		pgx.Identifier{c.config.DBTable}.Sanitize(),
+		pgx.Identifier(strings.Split(c.config.DBTable, ".")).Sanitize(),
 		strings.Join(columns, ", "),
 		strings.Join(placeholders, ", "))
 
@@ -282,7 +282,7 @@ func (c *Client) buildUpdateQuery(doc *types.Document) (string, []interface{}) {
 	args = append(args, doc.FileName)
 
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s = $%d",
-		pgx.Identifier{c.config.DBTable}.Sanitize(),
+		pgx.Identifier(strings.Split(c.config.DBTable, ".")).Sanitize(),
 		strings.Join(setClauses, ", "),
 		pgx.Identifier{c.config.ColumnFileName}.Sanitize(),
 		argIndex)
