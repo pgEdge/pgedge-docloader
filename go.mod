@@ -1,6 +1,6 @@
 module github.com/pgedge/pgedge-docloader
 
-go 1.25.8
+go 1.26.10
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.5.0
